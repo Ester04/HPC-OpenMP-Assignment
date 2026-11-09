@@ -1,0 +1,29 @@
+CC      ?= gcc
+CFLAGS  ?= -O3 -march=native -std=gnu11 -Wall -Wextra
+OMPFLAGS = -fopenmp
+VERSIONS = 0 1 2 3 4
+BINS     = $(addprefix lu_v,$(VERSIONS))
+
+# Parametri per "make bench"
+N       ?= 2000
+REPS    ?= 5
+THREADS ?= 1 2 4 8
+
+all: $(BINS)
+
+lu_v%: lu.c
+	 $(CC) $(CFLAGS) $(OMPFLAGS) -DVERSION=$* $< -o $@ -lm
+
+# Correttezza: confronto con la versione seriale + residuo ||LU - A||/||A||
+check: all
+	 @for v in $(VERSIONS); do OMP_NUM_THREADS=4 ./lu_v$$v 400 1 1; done | \
+	   awk -F, '{ if ($$7+0 > 1e-9 || $$8+0 > 1e-9) { print "FAIL v" $$1 "  diff=" $$7 " res=" $$8; bad=1 } \
+	              else print "OK   v" $$1 "  diff=" $$7 " res=" $$8 } END { exit bad }'
+
+bench: all
+	 ./bench.sh $(N) $(REPS) "$(THREADS)"
+
+clean:
+	 rm -f $(BINS) results.csv
+
+.PHONY: all check bench clean
