@@ -124,7 +124,7 @@ for (int i = k + 1; i < n; i++) {
 
 Usare una macchina Linux con `perf`, Valgrind (strumento Cachegrind) e un compilatore C con supporto OpenMP. `perf` deve poter accedere ai contatori hardware: disponibilità degli eventi e permessi dipendono dalla macchina e dalla sua configurazione. macOS non fornisce normalmente il `perf` di Linux; per queste misure usare un ambiente Linux compatibile con entrambi gli strumenti. La presenza dei comandi non garantisce che tutti gli eventi siano supportati o accessibili.
 
-Lo script [`perf_valgrind.sh`](./perf_valgrind.sh) compila direttamente le tre sorgenti disponibili, insieme a `polybench.c`; non misura le versioni 1 e 2. Usa per default `gcc`, `-O3 -march=native -std=gnu11 -Wall -Wextra` e `-fopenmp`. Eseguire i confronti sulla stessa macchina, con le stesse opzioni e lo stesso `N`. Se necessario, si possono impostare `CC`, `CFLAGS` e `OMPFLAGS` nell'ambiente prima del comando.
+Lo script [`perf_valgrind.sh`](./perf_valgrind.sh) compila direttamente le tre sorgenti disponibili, insieme a `polybench.c`; non misura le versioni 1 e 2. Per le compilazioni segue i valori predefiniti del Makefile (`gcc`, `-O2 -g -fopenmp` e `-lm`) e prova per default prima 4 e poi 8 thread. Eseguire i confronti sulla stessa macchina, con le stesse opzioni e lo stesso `N`. Se necessario, si possono impostare `CC`, `CFLAGS` e `OMPFLAGS` nell'ambiente prima del comando.
 
 **Correttezza prima delle prestazioni:** l'inizializzazione corrente produce una matrice di rango uno, quindi singolare per `N > 1`. La LU senza pivoting può incontrare pivot nulli o numericamente molto piccoli, producendo valori non finiti o risultati instabili. Lo script non verifica la correttezza né il residuo: confrontare le prestazioni non dimostra che la fattorizzazione sia valida. Per una valutazione attendibile del kernel, verificare separatamente il risultato rispetto a un riferimento e il residuo su matrici con pivot non nulli, usando lo stesso input per ogni versione; il solo confronto dell'output stampato a due decimali non basta.
 
@@ -142,21 +142,21 @@ I parametri sono posizionali e hanno questi valori predefiniti:
 |---|---:|---|
 | `N` | `2000` | Dimensione della matrice quadrata, fissata in compilazione |
 | `PERF_REPS` | `5` | Ripetizioni di `perf` per versione e numero di thread |
-| `THREADS` | `"1 2 4 8"` | Elenco dei valori di `OMP_NUM_THREADS`, tra virgolette |
+| `THREADS` | `"4 8"` | Elenco ordinato dei valori di `OMP_NUM_THREADS`, tra virgolette |
 | `OUT.csv` | `lu_results.csv` | File CSV; se esiste, viene sovrascritto |
 | `VALGRIND_REPS` | `1` | Ripetizioni di Cachegrind per versione e numero di thread |
 
 Per una prima prova, su una matrice piccola:
 
 ```bash
-./perf_valgrind.sh 128 3 "1 2 4" lu_prova.csv 1
+./perf_valgrind.sh 128 3 "4 8" lu_prova.csv 1
 ```
 
 Per una misura più rappresentativa, ad esempio:
 
 ```bash
 OMP_DYNAMIC=FALSE OMP_PROC_BIND=TRUE OMP_PLACES=cores \
-  ./perf_valgrind.sh 2000 5 "1 2 4 8" lu_results.csv 1
+  ./perf_valgrind.sh 2000 5 "4 8" lu_results.csv 1
 ```
 
 La seconda esecuzione può richiedere molto tempo: Cachegrind rallenta notevolmente il programma. Scegliere `N` e i thread in funzione delle risorse disponibili, iniziando con pochi thread e un input piccolo. L'impostazione di `OMP_DYNAMIC=FALSE` e dell'affinità aiuta a rendere i test ripetibili; annotare CPU, compilatore, opzioni, sistema, numero di core e variabili OpenMP usate. Limitare gli altri carichi sulla macchina e ripetere l'esperimento in condizioni analoghe.

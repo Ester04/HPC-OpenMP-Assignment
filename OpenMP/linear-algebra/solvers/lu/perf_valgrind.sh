@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Benchmark the LU sources with perf stat and Valgrind Cachegrind.
-# Usage: ./perf_valgrind.sh [N=2000] [PERF_REPS=5] ["THREADS=1 2 4 8"] \
+# Usage: ./perf_valgrind.sh [N=2000] [PERF_REPS=5] ["THREADS=4 8"] \
 #        [OUT=lu_results.csv] [VALGRIND_REPS=1]
 set -euo pipefail
 
@@ -9,11 +9,11 @@ UTIL_DIR="$SCRIPT_DIR/../../../utilities"
 
 N="${1:-2000}"
 PERF_REPS="${2:-5}"
-THREADS_TEXT="${3:-1 2 4 8}"
+THREADS_TEXT="${3:-4 8}"
 OUT="${4:-lu_results.csv}"
 VALGRIND_REPS="${5:-1}"
 CC="${CC:-gcc}"
-CFLAGS="${CFLAGS:--O3 -march=native -std=gnu11 -Wall -Wextra}"
+CFLAGS="${CFLAGS:--O2 -g}"
 OMPFLAGS="${OMPFLAGS:--fopenmp}"
 PERF_EVENTS="${PERF_EVENTS:-task-clock,cycles,instructions,cache-references,cache-misses,branch-misses}"
 
