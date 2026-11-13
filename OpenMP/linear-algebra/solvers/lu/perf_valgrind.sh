@@ -238,3 +238,10 @@ for item in "${BINS[@]}"; do
 done
 
 echo "Risultati salvati in: $OUT"
+
+
+#USED on Nano1:
+#OMP_DYNAMIC=FALSE OMP_PROC_BIND=TRUE OMP_PLACES=cores \
+#  ./perf_valgrind.sh
+
+#python3 plot_lu_results.py lu_results.csv
