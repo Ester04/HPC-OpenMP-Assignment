@@ -1,13 +1,14 @@
 #!/usr/bin/env bash
 # Benchmark the LU sources with perf stat and Valgrind Cachegrind.
-# Usage: ./perf_valgrind.sh [N=2000] [PERF_REPS=5] ["THREADS=4 8"] \
+# Usage: ./perf_valgrind.sh ["DATASETS=MINI SMALL STANDARD LARGE EXTRALARGE"] \
+#        [PERF_REPS=5] ["THREADS=4 8"] \
 #        [OUT=lu_results.csv] [VALGRIND_REPS=1]
 set -euo pipefail
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 UTIL_DIR="$SCRIPT_DIR/../../../utilities"
 
-N="${1:-2000}"
+DATASETS_TEXT="${1:-MINI SMALL STANDARD LARGE EXTRALARGE}"
 PERF_REPS="${2:-5}"
 THREADS_TEXT="${3:-4 8}"
 OUT="${4:-lu_results.csv}"
@@ -17,9 +18,10 @@ CFLAGS="${CFLAGS:--O2 -g}"
 OMPFLAGS="${OMPFLAGS:--fopenmp}"
 PERF_EVENTS="${PERF_EVENTS:-task-clock,cycles,instructions,cache-references,cache-misses,branch-misses}"
 
-if [[ ! "$N" =~ ^[1-9][0-9]*$ || ! "$PERF_REPS" =~ ^[1-9][0-9]*$ || \
-      ! "$VALGRIND_REPS" =~ ^[1-9][0-9]*$ ]]; then
-  echo "Errore: N e il numero di ripetizioni devono essere interi positivi." >&2
+export LC_ALL=C
+
+if [[ ! "$PERF_REPS" =~ ^[1-9][0-9]*$ || ! "$VALGRIND_REPS" =~ ^[1-9][0-9]*$ ]]; then
+  echo "Errore: il numero di ripetizioni deve essere un intero positivo." >&2
   exit 2
 fi
 
@@ -33,6 +35,12 @@ for tool in perf valgrind awk; do
     exit 2
   fi
 done
+
+read -r -a DATASETS <<< "$DATASETS_TEXT"
+if (("${#DATASETS[@]}" == 0)); then
+  echo "Errore: specificare almeno un dataset o una dimensione." >&2
+  exit 2
+fi
 
 read -r -a THREADS <<< "$THREADS_TEXT"
 if (("${#THREADS[@]}" == 0)); then
@@ -56,17 +64,51 @@ trap 'rm -rf -- "$TMP_DIR"' EXIT
 
 read -r -a CFLAGS_ARRAY <<< "$CFLAGS"
 read -r -a OMPFLAGS_ARRAY <<< "$OMPFLAGS"
-SOURCES=( "v0:$SCRIPT_DIR/lu.c" "v3:$SCRIPT_DIR/lu_v3.c" "v4:$SCRIPT_DIR/lu_v4.c" )
+SOURCES=(
+  "v0:$SCRIPT_DIR/lu.c"
+  "v2:$SCRIPT_DIR/lu_v2.c"
+  "v3:$SCRIPT_DIR/lu_v3.c"
+  "v4:$SCRIPT_DIR/lu_v4.c"
+)
 BINS=()
+SIZES=()
 
-for entry in "${SOURCES[@]}"; do
-  version="${entry%%:*}"
-  source_file="${entry#*:}"
-  binary="$TMP_DIR/lu_$version"
-  echo "Compilo $version ($source_file)..." >&2
-  "$CC" "${CFLAGS_ARRAY[@]}" "${OMPFLAGS_ARRAY[@]}" -DN="$N" \
-    -I"$UTIL_DIR" "$source_file" "$UTIL_DIR/polybench.c" -lm -o "$binary"
-  BINS+=( "$version:$binary" )
+for dataset in "${DATASETS[@]}"; do
+  case "$dataset" in
+    STANDARD) size_flag="-DSTANDARD_DATASET=" ;;
+    MINI|SMALL|LARGE|EXTRALARGE) size_flag="-D${dataset}_DATASET" ;;
+    *)
+      if [[ ! "$dataset" =~ ^[1-9][0-9]*$ ]]; then
+        echo "Errore: dataset o dimensione non validi: '$dataset'." >&2
+        exit 2
+      fi
+      size_flag="-DN=$dataset"
+      ;;
+  esac
+  N="$(printf '#include "lu.h"\nN\n' | \
+    "$CC" "${CFLAGS_ARRAY[@]}" "${OMPFLAGS_ARRAY[@]}" "$size_flag" \
+      -I"$SCRIPT_DIR" -E -P -x c -)"
+  if [[ ! "$N" =~ ^[1-9][0-9]*$ ]]; then
+    echo "Errore: dimensione non valida per '$dataset': '$N'." >&2
+    exit 2
+  fi
+  for previous in ${SIZES[@]+"${SIZES[@]}"}; do
+    if [[ "$N" == "$previous" ]]; then
+      echo "Errore: dimensione N=$N ripetuta; selezionare dataset distinti." >&2
+      exit 2
+    fi
+  done
+  SIZES+=( "$N" )
+
+  for entry in "${SOURCES[@]}"; do
+    version="${entry%%:*}"
+    source_file="${entry#*:}"
+    binary="$TMP_DIR/lu_${version}_n${N}"
+    echo "Compilo $version, dataset=$dataset, N=$N..." >&2
+    "$CC" "${CFLAGS_ARRAY[@]}" "${OMPFLAGS_ARRAY[@]}" "$size_flag" \
+      -I"$UTIL_DIR" "$source_file" "$UTIL_DIR/polybench.c" -lm -o "$binary"
+    BINS+=( "$version:$N:$binary" )
+  done
 done
 
 echo "tool,version,n,threads,rep,wall_seconds,task_clock_ms,cycles,instructions,cache_references,cache_misses,branch_misses,vg_ir,vg_i1mr,vg_ilmr,vg_dr,vg_d1mr,vg_dlmr,vg_dw,vg_d1mw,vg_dlmw,exit_status" > "$OUT"
@@ -139,12 +181,14 @@ run_timed() {
 echo "Misure perf..."
 for item in "${BINS[@]}"; do
   version="${item%%:*}"
-  binary="${item#*:}"
+  remaining="${item#*:}"
+  N="${remaining%%:*}"
+  binary="${remaining#*:}"
   for thread_count in "${THREADS[@]}"; do
     for ((rep = 1; rep <= PERF_REPS; rep++)); do
-      perf_file="$TMP_DIR/perf_${version}_${thread_count}_${rep}.csv"
-      time_file="$TMP_DIR/time_${version}_${thread_count}_${rep}.txt"
-      echo "perf $version, thread=$thread_count, ripetizione=$rep" >&2
+      perf_file="$TMP_DIR/perf_${version}_${N}_${thread_count}_${rep}.csv"
+      time_file="$TMP_DIR/time_${version}_${N}_${thread_count}_${rep}.txt"
+      echo "perf $version, N=$N, thread=$thread_count, ripetizione=$rep" >&2
       status="$(run_timed "$time_file" env OMP_NUM_THREADS="$thread_count" \
         perf stat -x, -o "$perf_file" -e "$PERF_EVENTS" -- "$binary")"
       wall_seconds="$(awk 'NF { print $1; exit }' "$time_file")"
@@ -165,18 +209,20 @@ done
 echo "Misure Valgrind Cachegrind..."
 for item in "${BINS[@]}"; do
   version="${item%%:*}"
-  binary="${item#*:}"
+  remaining="${item#*:}"
+  N="${remaining%%:*}"
+  binary="${remaining#*:}"
   for thread_count in "${THREADS[@]}"; do
     for ((rep = 1; rep <= VALGRIND_REPS; rep++)); do
-      cache_file="$TMP_DIR/cache_${version}_${thread_count}_${rep}.out"
-      log_file="$TMP_DIR/valgrind_${version}_${thread_count}_${rep}.log"
-      time_file="$TMP_DIR/time_vg_${version}_${thread_count}_${rep}.txt"
-      echo "valgrind $version, thread=$thread_count, ripetizione=$rep" >&2
+      cache_file="$TMP_DIR/cache_${version}_${N}_${thread_count}_${rep}.out"
+      log_file="$TMP_DIR/valgrind_${version}_${N}_${thread_count}_${rep}.log"
+      time_file="$TMP_DIR/time_vg_${version}_${N}_${thread_count}_${rep}.txt"
+      echo "valgrind $version, N=$N, thread=$thread_count, ripetizione=$rep" >&2
       status="$(run_timed "$time_file" env OMP_NUM_THREADS="$thread_count" \
         valgrind --tool=cachegrind --cachegrind-out-file="$cache_file" \
         --log-file="$log_file" "$binary")"
       wall_seconds="$(awk 'NF { print $1; exit }' "$time_file")"
-      values=""
+      values=",,,,,,,,"
       if [[ -f "$cache_file" ]]; then
         values="$(cachegrind_values "$cache_file")"
       else
