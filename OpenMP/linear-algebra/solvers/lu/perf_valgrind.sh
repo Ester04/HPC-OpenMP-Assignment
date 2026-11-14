@@ -1,30 +1,30 @@
 #!/usr/bin/env bash
 # Benchmark the LU sources with perf stat and Valgrind Cachegrind.
 # Usage: ./perf_valgrind.sh ["DATASETS=MINI SMALL STANDARD LARGE EXTRALARGE"] \
-#        [PERF_REPS=5] ["THREADS=4 8"] \
-#        [OUT=lu_results.csv] [VALGRIND_REPS=1]
+#        [PERF_REPS=3] ["THREADS=4"] \
+#        [OUT=lu_kernel_results.csv] [VALGRIND_REPS=3]
 set -euo pipefail
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 UTIL_DIR="$SCRIPT_DIR/../../../utilities"
 
 DATASETS_TEXT="${1:-MINI SMALL STANDARD LARGE EXTRALARGE}"
-PERF_REPS="${2:-5}"
-THREADS_TEXT="${3:-4 8}"
-OUT="${4:-lu_results.csv}"
-VALGRIND_REPS="${5:-1}"
+PERF_REPS="${2:-3}"
+THREADS_TEXT="${3:-4}"
+OUT="${4:-lu_kernel_results.csv}"
+VALGRIND_REPS="${5:-3}"
 CC="${CC:-gcc}"
 CFLAGS="${CFLAGS:--O2 -g}"
 OMPFLAGS="${OMPFLAGS:--fopenmp}"
 PERF_EVENTS="${PERF_EVENTS:-task-clock,cycles,instructions,cache-references,cache-misses,branch-misses}"
 LU_VERSIONS="${LU_VERSIONS:-v0 v2 v2_simd v2_recip v2_hoist v2_rows v2_restrict v3 v4}"
 LU_APPEND="${LU_APPEND:-0}"
-CSV_HEADER="tool,version,n,threads,rep,wall_seconds,task_clock_ms,cycles,instructions,cache_references,cache_misses,branch_misses,vg_ir,vg_i1mr,vg_ilmr,vg_dr,vg_d1mr,vg_dlmr,vg_dw,vg_d1mw,vg_dlmw,exit_status"
+CSV_HEADER="tool,version,n,threads,rep,wall_seconds,task_clock_ms,cycles,instructions,cache_references,cache_misses,branch_misses,vg_ir,vg_i1mr,vg_ilmr,vg_dr,vg_d1mr,vg_dlmr,vg_dw,vg_d1mw,vg_dlmw,exit_status,kernel_seconds"
 
 export LC_ALL=C
 
-if [[ ! "$PERF_REPS" =~ ^[1-9][0-9]*$ || ! "$VALGRIND_REPS" =~ ^[1-9][0-9]*$ ]]; then
-  echo "Errore: il numero di ripetizioni deve essere un intero positivo." >&2
+if [[ ! "$PERF_REPS" =~ ^[1-9][0-9]*$ || ! "$VALGRIND_REPS" =~ ^(0|[1-9][0-9]*)$ ]]; then
+  echo "Errore: PERF_REPS deve essere positivo e VALGRIND_REPS non negativo." >&2
   exit 2
 fi
 if [[ "$LU_APPEND" != 0 && "$LU_APPEND" != 1 ]]; then
@@ -36,7 +36,11 @@ if ! command -v "$CC" >/dev/null 2>&1; then
   echo "Errore: compilatore '$CC' non trovato." >&2
   exit 2
 fi
-for tool in perf valgrind awk; do
+TOOLS=(perf awk)
+if ((VALGRIND_REPS > 0)); then
+  TOOLS+=(valgrind)
+fi
+for tool in "${TOOLS[@]}"; do
   if ! command -v "$tool" >/dev/null 2>&1; then
     echo "Errore: '$tool' non trovato nel PATH." >&2
     exit 2
@@ -63,6 +67,10 @@ done
 
 if [[ "$OUT" != /* ]]; then
   OUT="$PWD/$OUT"
+fi
+if [[ "$LU_APPEND" == 0 && -e "$OUT" ]]; then
+  echo "Errore: il file di output esiste già: $OUT. Scegliere un altro nome o usare LU_APPEND=1." >&2
+  exit 2
 fi
 mkdir -p -- "$(dirname -- "$OUT")"
 
@@ -148,7 +156,9 @@ for dataset in "${DATASETS[@]}"; do
     fi
     binary="$TMP_DIR/lu_${version}_n${N}"
     echo "Compilo $version, dataset=$dataset, N=$N..." >&2
-    "$CC" "${CFLAGS_ARRAY[@]}" "${OMPFLAGS_ARRAY[@]}" "$size_flag" ${step_flag[@]+"${step_flag[@]}"} \
+    "$CC" "${CFLAGS_ARRAY[@]}" "${OMPFLAGS_ARRAY[@]}" \
+      -UPOLYBENCH_GFLOPS -UPOLYBENCH_CYCLE_ACCURATE_TIMER -UPOLYBENCH_PAPI \
+      -DPOLYBENCH_TIME -DPOLYBENCH_NO_FLUSH_CACHE "$size_flag" ${step_flag[@]+"${step_flag[@]}"} \
       -I"$UTIL_DIR" "$source_file" "$UTIL_DIR/polybench.c" -lm -o "$binary"
     BINS+=( "$version:$N:$binary" )
   done
@@ -179,7 +189,7 @@ if [[ "$LU_APPEND" == 1 ]]; then
       next
     }
     {
-      if (NF != 22) {
+      if (NF != 23) {
         print "Errore: riga CSV incompleta o non valida: " FNR > "/dev/stderr"
         bad = 1
       }
@@ -217,7 +227,10 @@ perf_values() {
       value = $1
       gsub(/^[[:space:]]+|[[:space:]]+$/, "", value)
       gsub(/,/, "", value)
-      if (value ~ /</ || value == "n/a") value = ""
+      if (value ~ /</ || value == "n/a") {
+        print "Avviso: contatore perf non disponibile: " event " (" value ")." > "/dev/stderr"
+        value = ""
+      }
       if (event == "task-clock") task_clock = value
       else if (event == "cycles") cycles = value
       else if (event == "instructions") instructions = value
@@ -264,13 +277,29 @@ cachegrind_values() {
 
 run_timed() {
   local time_file="$1"
-  shift
+  local kernel_file="$2"
+  local log_file="$3"
+  shift 3
   local status
   set +e
-  { TIMEFORMAT='%R'; time "$@" >/dev/null 2>&1; } 2> "$time_file"
+  { TIMEFORMAT='%R'; time "$@" >"$kernel_file" 2>"$log_file"; } 2> "$time_file"
   status=$?
   set -e
   printf '%s' "$status"
+}
+
+kernel_time() {
+  awk '
+    NF {
+      if (NF != 1 || $1 !~ /^[0-9]+([.][0-9]+)?$/) bad = 1
+      value = $1
+      count++
+    }
+    END {
+      if (bad || count != 1) exit 1
+      print value
+    }
+  ' "$1"
 }
 
 echo "Misure perf..."
@@ -283,20 +312,31 @@ for item in "${BINS[@]}"; do
     for ((rep = 1; rep <= PERF_REPS; rep++)); do
       perf_file="$TMP_DIR/perf_${version}_${N}_${thread_count}_${rep}.csv"
       time_file="$TMP_DIR/time_${version}_${N}_${thread_count}_${rep}.txt"
+      kernel_file="$TMP_DIR/kernel_${version}_${N}_${thread_count}_${rep}.txt"
+      log_file="$TMP_DIR/perf_${version}_${N}_${thread_count}_${rep}.log"
       echo "perf $version, N=$N, thread=$thread_count, ripetizione=$rep" >&2
-      status="$(run_timed "$time_file" env OMP_NUM_THREADS="$thread_count" \
+      status="$(run_timed "$time_file" "$kernel_file" "$log_file" env OMP_NUM_THREADS="$thread_count" OMP_DYNAMIC=FALSE \
         perf stat -x, -o "$perf_file" -e "$PERF_EVENTS" -- "$binary")"
+      if [[ "$status" != 0 ]]; then
+        echo "Errore: perf non ha completato $version (exit $status)." >&2
+        cat "$log_file" >&2
+        [[ ! -f "$perf_file" ]] || cat "$perf_file" >&2
+        exit 1
+      fi
+      if ! kernel_seconds="$(kernel_time "$kernel_file")"; then
+        echo "Errore: tempo kernel non valido per $version, N=$N, ripetizione=$rep." >&2
+        cat "$kernel_file" "$log_file" >&2
+        exit 1
+      fi
       wall_seconds="$(awk 'NF { print $1; exit }' "$time_file")"
       if [[ -f "$perf_file" ]]; then
         values="$(perf_values "$perf_file")"
       else
-        values=",,,,,"
+        echo "Errore: perf non ha prodotto i contatori per $version." >&2
+        exit 1
       fi
-      printf 'perf,%s,%s,%s,%s,%s,%s,,,,,,,,,,%s\n' \
-        "$version" "$N" "$thread_count" "$rep" "$wall_seconds" "$values" "$status" >> "$OUT"
-      if [[ "$status" != 0 ]]; then
-        echo "Avviso: perf non ha completato correttamente (exit $status)." >&2
-      fi
+      printf 'perf,%s,%s,%s,%s,%s,%s,,,,,,,,,,%s,%s\n' \
+        "$version" "$N" "$thread_count" "$rep" "$wall_seconds" "$values" "$status" "$kernel_seconds" >> "$OUT"
     done
   done
 done
@@ -312,22 +352,33 @@ for item in "${BINS[@]}"; do
       cache_file="$TMP_DIR/cache_${version}_${N}_${thread_count}_${rep}.out"
       log_file="$TMP_DIR/valgrind_${version}_${N}_${thread_count}_${rep}.log"
       time_file="$TMP_DIR/time_vg_${version}_${N}_${thread_count}_${rep}.txt"
+      kernel_file="$TMP_DIR/kernel_vg_${version}_${N}_${thread_count}_${rep}.txt"
+      stderr_file="$TMP_DIR/stderr_vg_${version}_${N}_${thread_count}_${rep}.log"
       echo "valgrind $version, N=$N, thread=$thread_count, ripetizione=$rep" >&2
-      status="$(run_timed "$time_file" env OMP_NUM_THREADS="$thread_count" \
+      status="$(run_timed "$time_file" "$kernel_file" "$stderr_file" env OMP_NUM_THREADS="$thread_count" OMP_DYNAMIC=FALSE \
         valgrind --tool=cachegrind --cachegrind-out-file="$cache_file" \
         --log-file="$log_file" "$binary")"
+      if [[ "$status" != 0 ]]; then
+        echo "Errore: Valgrind non ha completato $version (exit $status)." >&2
+        cat "$stderr_file" >&2
+        [[ ! -f "$log_file" ]] || cat "$log_file" >&2
+        exit 1
+      fi
+      if ! kernel_seconds="$(kernel_time "$kernel_file")"; then
+        echo "Errore: tempo kernel Cachegrind non valido per $version, N=$N, ripetizione=$rep." >&2
+        cat "$kernel_file" "$stderr_file" >&2
+        exit 1
+      fi
       wall_seconds="$(awk 'NF { print $1; exit }' "$time_file")"
-      values=",,,,,,,,"
       if [[ -f "$cache_file" ]]; then
         values="$(cachegrind_values "$cache_file")"
       else
-        echo "Avviso: Cachegrind non ha prodotto i contatori per $version." >&2
+        echo "Errore: Cachegrind non ha prodotto i contatori per $version." >&2
+        [[ ! -f "$log_file" ]] || cat "$log_file" >&2
+        exit 1
       fi
-      printf 'valgrind,%s,%s,%s,%s,%s,,,,,,,%s,%s\n' \
-        "$version" "$N" "$thread_count" "$rep" "$wall_seconds" "$values" "$status" >> "$OUT"
-      if [[ "$status" != 0 ]]; then
-        echo "Avviso: Valgrind non ha completato correttamente (exit $status)." >&2
-      fi
+      printf 'valgrind,%s,%s,%s,%s,%s,,,,,,,%s,%s,%s\n' \
+        "$version" "$N" "$thread_count" "$rep" "$wall_seconds" "$values" "$status" "$kernel_seconds" >> "$OUT"
     done
   done
 done
@@ -339,4 +390,4 @@ echo "Risultati salvati in: $OUT"
 #OMP_DYNAMIC=FALSE OMP_PROC_BIND=TRUE OMP_PLACES=cores \
 #  ./perf_valgrind.sh
 
-#python3 plot_lu_results.py lu_results.csv
+# plot_lu_results.py uses wall_seconds, not kernel_seconds.

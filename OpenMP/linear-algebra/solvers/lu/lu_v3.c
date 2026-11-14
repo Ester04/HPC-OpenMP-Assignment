@@ -71,6 +71,7 @@ static void kernel_lu(int n,
   }
 }
 
+
 int main(int argc, char **argv)
 {
   /* Retrieve problem size. */
