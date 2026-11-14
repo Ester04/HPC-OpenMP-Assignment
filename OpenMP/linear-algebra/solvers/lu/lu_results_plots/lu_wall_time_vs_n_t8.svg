@@ -1,0 +1,137 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="920" height="540" viewBox="0 0 920 540">
+<title>LU: tempo mediano per dimensione (8 thread)</title>
+<rect width="100%" height="100%" fill="white"/>
+<text x="460.0" y="28" text-anchor="middle" font-family="sans-serif" font-size="19" font-weight="bold">LU: tempo mediano per dimensione (8 thread)</text>
+<line x1="90" y1="448.0" x2="680" y2="448.0" stroke="#e5e9f0"/>
+<text x="78" y="453.0" text-anchor="end" font-family="sans-serif" font-size="12">0.01</text>
+<line x1="90" y1="350.5" x2="680" y2="350.5" stroke="#e5e9f0"/>
+<text x="78" y="355.5" text-anchor="end" font-family="sans-serif" font-size="12">0.1</text>
+<line x1="90" y1="253.0" x2="680" y2="253.0" stroke="#e5e9f0"/>
+<text x="78" y="258.0" text-anchor="end" font-family="sans-serif" font-size="12">1</text>
+<line x1="90" y1="155.5" x2="680" y2="155.5" stroke="#e5e9f0"/>
+<text x="78" y="160.5" text-anchor="end" font-family="sans-serif" font-size="12">10</text>
+<line x1="90" y1="58.0" x2="680" y2="58.0" stroke="#e5e9f0"/>
+<text x="78" y="63.0" text-anchor="end" font-family="sans-serif" font-size="12">100</text>
+<line x1="90" y1="58" x2="90" y2="448" stroke="#4c566a"/>
+<line x1="90" y1="448" x2="680" y2="448" stroke="#4c566a"/>
+<line x1="90.0" y1="448" x2="90.0" y2="453" stroke="#4c566a"/>
+<text x="90.0" y="471" text-anchor="middle" font-family="sans-serif" font-size="12">32</text>
+<line x1="237.5" y1="448" x2="237.5" y2="453" stroke="#4c566a"/>
+<text x="237.5" y="471" text-anchor="middle" font-family="sans-serif" font-size="12">128</text>
+<line x1="385.0" y1="448" x2="385.0" y2="453" stroke="#4c566a"/>
+<text x="385.0" y="471" text-anchor="middle" font-family="sans-serif" font-size="12">1024</text>
+<line x1="532.5" y1="448" x2="532.5" y2="453" stroke="#4c566a"/>
+<text x="532.5" y="471" text-anchor="middle" font-family="sans-serif" font-size="12">2000</text>
+<line x1="680.0" y1="448" x2="680.0" y2="453" stroke="#4c566a"/>
+<text x="680.0" y="471" text-anchor="middle" font-family="sans-serif" font-size="12">4000</text>
+<text x="385.0" y="516" text-anchor="middle" font-family="sans-serif" font-size="14">Dimensione N (categorie equidistanti)</text>
+<text x="22" y="253.0" text-anchor="middle" transform="rotate(-90 22 253.0)" font-family="sans-serif" font-size="14">Tempo wall (s, scala logaritmica)</text>
+<line x1="90.0" y1="418.6" x2="237.5" y2="414.6" stroke="#4c566a" stroke-width="2.5"/>
+<line x1="237.5" y1="414.6" x2="385.0" y2="249.2" stroke="#4c566a" stroke-width="2.5"/>
+<line x1="385.0" y1="249.2" x2="532.5" y2="167.2" stroke="#4c566a" stroke-width="2.5"/>
+<line x1="532.5" y1="167.2" x2="680.0" y2="79.2" stroke="#4c566a" stroke-width="2.5"/>
+<line x1="90.0" y1="418.6" x2="90.0" y2="418.6" stroke="#4c566a" stroke-width="1.5"/>
+<line x1="86.0" y1="418.6" x2="94.0" y2="418.6" stroke="#4c566a" stroke-width="1.5"/>
+<line x1="86.0" y1="418.6" x2="94.0" y2="418.6" stroke="#4c566a" stroke-width="1.5"/>
+<circle cx="90.0" cy="418.6" r="5" fill="#4c566a"><title>v0, Dimensione N (categorie equidistanti)=32: 0.02</title></circle>
+<line x1="237.5" y1="416.6" x2="237.5" y2="414.6" stroke="#4c566a" stroke-width="1.5"/>
+<line x1="233.5" y1="416.6" x2="241.5" y2="416.6" stroke="#4c566a" stroke-width="1.5"/>
+<line x1="233.5" y1="414.6" x2="241.5" y2="414.6" stroke="#4c566a" stroke-width="1.5"/>
+<circle cx="237.5" cy="414.6" r="5" fill="#4c566a"><title>v0, Dimensione N (categorie equidistanti)=128: 0.022</title></circle>
+<line x1="385.0" y1="249.7" x2="385.0" y2="248.7" stroke="#4c566a" stroke-width="1.5"/>
+<line x1="381.0" y1="249.7" x2="389.0" y2="249.7" stroke="#4c566a" stroke-width="1.5"/>
+<line x1="381.0" y1="248.7" x2="389.0" y2="248.7" stroke="#4c566a" stroke-width="1.5"/>
+<circle cx="385.0" cy="249.2" r="5" fill="#4c566a"><title>v0, Dimensione N (categorie equidistanti)=1024: 1.093</title></circle>
+<line x1="532.5" y1="167.2" x2="532.5" y2="167.1" stroke="#4c566a" stroke-width="1.5"/>
+<line x1="528.5" y1="167.2" x2="536.5" y2="167.2" stroke="#4c566a" stroke-width="1.5"/>
+<line x1="528.5" y1="167.1" x2="536.5" y2="167.1" stroke="#4c566a" stroke-width="1.5"/>
+<circle cx="532.5" cy="167.2" r="5" fill="#4c566a"><title>v0, Dimensione N (categorie equidistanti)=2000: 7.587</title></circle>
+<line x1="680.0" y1="79.3" x2="680.0" y2="79.2" stroke="#4c566a" stroke-width="1.5"/>
+<line x1="676.0" y1="79.3" x2="684.0" y2="79.3" stroke="#4c566a" stroke-width="1.5"/>
+<line x1="676.0" y1="79.2" x2="684.0" y2="79.2" stroke="#4c566a" stroke-width="1.5"/>
+<circle cx="680.0" cy="79.2" r="5" fill="#4c566a"><title>v0, Dimensione N (categorie equidistanti)=4000: 60.585</title></circle>
+<line x1="708" y1="80" x2="732" y2="80" stroke="#4c566a" stroke-width="2.5"/>
+<circle cx="720" cy="80" r="4" fill="#4c566a"/>
+<text x="742" y="84" font-family="sans-serif" font-size="13">v0</text>
+<line x1="90.0" y1="414.6" x2="237.5" y2="402.9" stroke="#5e81ac" stroke-width="2.5"/>
+<line x1="237.5" y1="402.9" x2="385.0" y2="266.9" stroke="#5e81ac" stroke-width="2.5"/>
+<line x1="385.0" y1="266.9" x2="532.5" y2="184.6" stroke="#5e81ac" stroke-width="2.5"/>
+<line x1="532.5" y1="184.6" x2="680.0" y2="96.7" stroke="#5e81ac" stroke-width="2.5"/>
+<line x1="90.0" y1="414.6" x2="90.0" y2="412.7" stroke="#5e81ac" stroke-width="1.5"/>
+<line x1="86.0" y1="414.6" x2="94.0" y2="414.6" stroke="#5e81ac" stroke-width="1.5"/>
+<line x1="86.0" y1="412.7" x2="94.0" y2="412.7" stroke="#5e81ac" stroke-width="1.5"/>
+<circle cx="90.0" cy="414.6" r="5" fill="#5e81ac"><title>v2, Dimensione N (categorie equidistanti)=32: 0.022</title></circle>
+<line x1="237.5" y1="402.9" x2="237.5" y2="401.5" stroke="#5e81ac" stroke-width="1.5"/>
+<line x1="233.5" y1="402.9" x2="241.5" y2="402.9" stroke="#5e81ac" stroke-width="1.5"/>
+<line x1="233.5" y1="401.5" x2="241.5" y2="401.5" stroke="#5e81ac" stroke-width="1.5"/>
+<circle cx="237.5" cy="402.9" r="5" fill="#5e81ac"><title>v2, Dimensione N (categorie equidistanti)=128: 0.029</title></circle>
+<line x1="385.0" y1="268.3" x2="385.0" y2="265.7" stroke="#5e81ac" stroke-width="1.5"/>
+<line x1="381.0" y1="268.3" x2="389.0" y2="268.3" stroke="#5e81ac" stroke-width="1.5"/>
+<line x1="381.0" y1="265.7" x2="389.0" y2="265.7" stroke="#5e81ac" stroke-width="1.5"/>
+<circle cx="385.0" cy="266.9" r="5" fill="#5e81ac"><title>v2, Dimensione N (categorie equidistanti)=1024: 0.72</title></circle>
+<line x1="532.5" y1="185.0" x2="532.5" y2="184.5" stroke="#5e81ac" stroke-width="1.5"/>
+<line x1="528.5" y1="185.0" x2="536.5" y2="185.0" stroke="#5e81ac" stroke-width="1.5"/>
+<line x1="528.5" y1="184.5" x2="536.5" y2="184.5" stroke="#5e81ac" stroke-width="1.5"/>
+<circle cx="532.5" cy="184.6" r="5" fill="#5e81ac"><title>v2, Dimensione N (categorie equidistanti)=2000: 5.033</title></circle>
+<line x1="680.0" y1="96.8" x2="680.0" y2="96.3" stroke="#5e81ac" stroke-width="1.5"/>
+<line x1="676.0" y1="96.8" x2="684.0" y2="96.8" stroke="#5e81ac" stroke-width="1.5"/>
+<line x1="676.0" y1="96.3" x2="684.0" y2="96.3" stroke="#5e81ac" stroke-width="1.5"/>
+<circle cx="680.0" cy="96.7" r="5" fill="#5e81ac"><title>v2, Dimensione N (categorie equidistanti)=4000: 40.14</title></circle>
+<line x1="708" y1="106" x2="732" y2="106" stroke="#5e81ac" stroke-width="2.5"/>
+<circle cx="720" cy="106" r="4" fill="#5e81ac"/>
+<text x="742" y="110" font-family="sans-serif" font-size="13">v2</text>
+<line x1="90.0" y1="412.7" x2="237.5" y2="402.9" stroke="#a3be8c" stroke-width="2.5"/>
+<line x1="237.5" y1="402.9" x2="385.0" y2="267.9" stroke="#a3be8c" stroke-width="2.5"/>
+<line x1="385.0" y1="267.9" x2="532.5" y2="185.5" stroke="#a3be8c" stroke-width="2.5"/>
+<line x1="532.5" y1="185.5" x2="680.0" y2="97.6" stroke="#a3be8c" stroke-width="2.5"/>
+<line x1="90.0" y1="414.6" x2="90.0" y2="412.7" stroke="#a3be8c" stroke-width="1.5"/>
+<line x1="86.0" y1="414.6" x2="94.0" y2="414.6" stroke="#a3be8c" stroke-width="1.5"/>
+<line x1="86.0" y1="412.7" x2="94.0" y2="412.7" stroke="#a3be8c" stroke-width="1.5"/>
+<circle cx="90.0" cy="412.7" r="5" fill="#a3be8c"><title>v3, Dimensione N (categorie equidistanti)=32: 0.023</title></circle>
+<line x1="237.5" y1="402.9" x2="237.5" y2="401.5" stroke="#a3be8c" stroke-width="1.5"/>
+<line x1="233.5" y1="402.9" x2="241.5" y2="402.9" stroke="#a3be8c" stroke-width="1.5"/>
+<line x1="233.5" y1="401.5" x2="241.5" y2="401.5" stroke="#a3be8c" stroke-width="1.5"/>
+<circle cx="237.5" cy="402.9" r="5" fill="#a3be8c"><title>v3, Dimensione N (categorie equidistanti)=128: 0.029</title></circle>
+<line x1="385.0" y1="270.5" x2="385.0" y2="265.9" stroke="#a3be8c" stroke-width="1.5"/>
+<line x1="381.0" y1="270.5" x2="389.0" y2="270.5" stroke="#a3be8c" stroke-width="1.5"/>
+<line x1="381.0" y1="265.9" x2="389.0" y2="265.9" stroke="#a3be8c" stroke-width="1.5"/>
+<circle cx="385.0" cy="267.9" r="5" fill="#a3be8c"><title>v3, Dimensione N (categorie equidistanti)=1024: 0.704</title></circle>
+<line x1="532.5" y1="185.7" x2="532.5" y2="185.0" stroke="#a3be8c" stroke-width="1.5"/>
+<line x1="528.5" y1="185.7" x2="536.5" y2="185.7" stroke="#a3be8c" stroke-width="1.5"/>
+<line x1="528.5" y1="185.0" x2="536.5" y2="185.0" stroke="#a3be8c" stroke-width="1.5"/>
+<circle cx="532.5" cy="185.5" r="5" fill="#a3be8c"><title>v3, Dimensione N (categorie equidistanti)=2000: 4.92</title></circle>
+<line x1="680.0" y1="97.7" x2="680.0" y2="96.9" stroke="#a3be8c" stroke-width="1.5"/>
+<line x1="676.0" y1="97.7" x2="684.0" y2="97.7" stroke="#a3be8c" stroke-width="1.5"/>
+<line x1="676.0" y1="96.9" x2="684.0" y2="96.9" stroke="#a3be8c" stroke-width="1.5"/>
+<circle cx="680.0" cy="97.6" r="5" fill="#a3be8c"><title>v3, Dimensione N (categorie equidistanti)=4000: 39.25</title></circle>
+<line x1="708" y1="132" x2="732" y2="132" stroke="#a3be8c" stroke-width="2.5"/>
+<circle cx="720" cy="132" r="4" fill="#a3be8c"/>
+<text x="742" y="136" font-family="sans-serif" font-size="13">v3</text>
+<line x1="90.0" y1="414.6" x2="237.5" y2="402.9" stroke="#d08770" stroke-width="2.5"/>
+<line x1="237.5" y1="402.9" x2="385.0" y2="265.6" stroke="#d08770" stroke-width="2.5"/>
+<line x1="385.0" y1="265.6" x2="532.5" y2="185.5" stroke="#d08770" stroke-width="2.5"/>
+<line x1="532.5" y1="185.5" x2="680.0" y2="97.7" stroke="#d08770" stroke-width="2.5"/>
+<line x1="90.0" y1="414.6" x2="90.0" y2="390.4" stroke="#d08770" stroke-width="1.5"/>
+<line x1="86.0" y1="414.6" x2="94.0" y2="414.6" stroke="#d08770" stroke-width="1.5"/>
+<line x1="86.0" y1="390.4" x2="94.0" y2="390.4" stroke="#d08770" stroke-width="1.5"/>
+<circle cx="90.0" cy="414.6" r="5" fill="#d08770"><title>v4, Dimensione N (categorie equidistanti)=32: 0.022</title></circle>
+<line x1="237.5" y1="402.9" x2="237.5" y2="401.5" stroke="#d08770" stroke-width="1.5"/>
+<line x1="233.5" y1="402.9" x2="241.5" y2="402.9" stroke="#d08770" stroke-width="1.5"/>
+<line x1="233.5" y1="401.5" x2="241.5" y2="401.5" stroke="#d08770" stroke-width="1.5"/>
+<circle cx="237.5" cy="402.9" r="5" fill="#d08770"><title>v4, Dimensione N (categorie equidistanti)=128: 0.029</title></circle>
+<line x1="385.0" y1="268.0" x2="385.0" y2="265.3" stroke="#d08770" stroke-width="1.5"/>
+<line x1="381.0" y1="268.0" x2="389.0" y2="268.0" stroke="#d08770" stroke-width="1.5"/>
+<line x1="381.0" y1="265.3" x2="389.0" y2="265.3" stroke="#d08770" stroke-width="1.5"/>
+<circle cx="385.0" cy="265.6" r="5" fill="#d08770"><title>v4, Dimensione N (categorie equidistanti)=1024: 0.743</title></circle>
+<line x1="532.5" y1="185.8" x2="532.5" y2="185.3" stroke="#d08770" stroke-width="1.5"/>
+<line x1="528.5" y1="185.8" x2="536.5" y2="185.8" stroke="#d08770" stroke-width="1.5"/>
+<line x1="528.5" y1="185.3" x2="536.5" y2="185.3" stroke="#d08770" stroke-width="1.5"/>
+<circle cx="532.5" cy="185.5" r="5" fill="#d08770"><title>v4, Dimensione N (categorie equidistanti)=2000: 4.926</title></circle>
+<line x1="680.0" y1="97.8" x2="680.0" y2="97.5" stroke="#d08770" stroke-width="1.5"/>
+<line x1="676.0" y1="97.8" x2="684.0" y2="97.8" stroke="#d08770" stroke-width="1.5"/>
+<line x1="676.0" y1="97.5" x2="684.0" y2="97.5" stroke="#d08770" stroke-width="1.5"/>
+<circle cx="680.0" cy="97.7" r="5" fill="#d08770"><title>v4, Dimensione N (categorie equidistanti)=4000: 39.188</title></circle>
+<line x1="708" y1="158" x2="732" y2="158" stroke="#d08770" stroke-width="2.5"/>
+<circle cx="720" cy="158" r="4" fill="#d08770"/>
+<text x="742" y="162" font-family="sans-serif" font-size="13">v4</text>
+</svg>

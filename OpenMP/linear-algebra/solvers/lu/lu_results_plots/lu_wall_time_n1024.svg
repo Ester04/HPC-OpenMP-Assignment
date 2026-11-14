@@ -1,0 +1,73 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="920" height="540" viewBox="0 0 920 540">
+<title>LU: tempo mediano per numero di thread (N=1024)</title>
+<rect width="100%" height="100%" fill="white"/>
+<text x="460.0" y="28" text-anchor="middle" font-family="sans-serif" font-size="19" font-weight="bold">LU: tempo mediano per numero di thread (N=1024)</text>
+<line x1="90" y1="448.0" x2="680" y2="448.0" stroke="#e5e9f0"/>
+<text x="78" y="453.0" text-anchor="end" font-family="sans-serif" font-size="12">0</text>
+<line x1="90" y1="370.0" x2="680" y2="370.0" stroke="#e5e9f0"/>
+<text x="78" y="375.0" text-anchor="end" font-family="sans-serif" font-size="12">0.245</text>
+<line x1="90" y1="292.0" x2="680" y2="292.0" stroke="#e5e9f0"/>
+<text x="78" y="297.0" text-anchor="end" font-family="sans-serif" font-size="12">0.489</text>
+<line x1="90" y1="214.0" x2="680" y2="214.0" stroke="#e5e9f0"/>
+<text x="78" y="219.0" text-anchor="end" font-family="sans-serif" font-size="12">0.734</text>
+<line x1="90" y1="136.0" x2="680" y2="136.0" stroke="#e5e9f0"/>
+<text x="78" y="141.0" text-anchor="end" font-family="sans-serif" font-size="12">0.979</text>
+<line x1="90" y1="58.0" x2="680" y2="58.0" stroke="#e5e9f0"/>
+<text x="78" y="63.0" text-anchor="end" font-family="sans-serif" font-size="12">1.22</text>
+<line x1="90" y1="58" x2="90" y2="448" stroke="#4c566a"/>
+<line x1="90" y1="448" x2="680" y2="448" stroke="#4c566a"/>
+<line x1="90.0" y1="448" x2="90.0" y2="453" stroke="#4c566a"/>
+<text x="90.0" y="471" text-anchor="middle" font-family="sans-serif" font-size="12">4</text>
+<line x1="680.0" y1="448" x2="680.0" y2="453" stroke="#4c566a"/>
+<text x="680.0" y="471" text-anchor="middle" font-family="sans-serif" font-size="12">8</text>
+<text x="385.0" y="516" text-anchor="middle" font-family="sans-serif" font-size="14">Thread</text>
+<text x="22" y="253.0" text-anchor="middle" transform="rotate(-90 22 253.0)" font-family="sans-serif" font-size="14">Tempo wall (s)</text>
+<line x1="90.0" y1="99.5" x2="680.0" y2="99.5" stroke="#4c566a" stroke-width="2.5"/>
+<line x1="90.0" y1="103.7" x2="90.0" y2="93.5" stroke="#4c566a" stroke-width="1.5"/>
+<line x1="86.0" y1="103.7" x2="94.0" y2="103.7" stroke="#4c566a" stroke-width="1.5"/>
+<line x1="86.0" y1="93.5" x2="94.0" y2="93.5" stroke="#4c566a" stroke-width="1.5"/>
+<circle cx="90.0" cy="99.5" r="5" fill="#4c566a"><title>v0, Thread=4: 1.093</title></circle>
+<line x1="680.0" y1="103.0" x2="680.0" y2="95.4" stroke="#4c566a" stroke-width="1.5"/>
+<line x1="676.0" y1="103.0" x2="684.0" y2="103.0" stroke="#4c566a" stroke-width="1.5"/>
+<line x1="676.0" y1="95.4" x2="684.0" y2="95.4" stroke="#4c566a" stroke-width="1.5"/>
+<circle cx="680.0" cy="99.5" r="5" fill="#4c566a"><title>v0, Thread=8: 1.093</title></circle>
+<line x1="708" y1="80" x2="732" y2="80" stroke="#4c566a" stroke-width="2.5"/>
+<circle cx="720" cy="80" r="4" fill="#4c566a"/>
+<text x="742" y="84" font-family="sans-serif" font-size="13">v0</text>
+<line x1="90.0" y1="247.5" x2="680.0" y2="218.4" stroke="#5e81ac" stroke-width="2.5"/>
+<line x1="90.0" y1="257.3" x2="90.0" y2="241.4" stroke="#5e81ac" stroke-width="1.5"/>
+<line x1="86.0" y1="257.3" x2="94.0" y2="257.3" stroke="#5e81ac" stroke-width="1.5"/>
+<line x1="86.0" y1="241.4" x2="94.0" y2="241.4" stroke="#5e81ac" stroke-width="1.5"/>
+<circle cx="90.0" cy="247.5" r="5" fill="#5e81ac"><title>v2, Thread=4: 0.629</title></circle>
+<line x1="680.0" y1="225.8" x2="680.0" y2="212.1" stroke="#5e81ac" stroke-width="1.5"/>
+<line x1="676.0" y1="225.8" x2="684.0" y2="225.8" stroke="#5e81ac" stroke-width="1.5"/>
+<line x1="676.0" y1="212.1" x2="684.0" y2="212.1" stroke="#5e81ac" stroke-width="1.5"/>
+<circle cx="680.0" cy="218.4" r="5" fill="#5e81ac"><title>v2, Thread=8: 0.72</title></circle>
+<line x1="708" y1="106" x2="732" y2="106" stroke="#5e81ac" stroke-width="2.5"/>
+<circle cx="720" cy="106" r="4" fill="#5e81ac"/>
+<text x="742" y="110" font-family="sans-serif" font-size="13">v2</text>
+<line x1="90.0" y1="258.3" x2="680.0" y2="223.5" stroke="#a3be8c" stroke-width="2.5"/>
+<line x1="90.0" y1="265.6" x2="90.0" y2="251.6" stroke="#a3be8c" stroke-width="1.5"/>
+<line x1="86.0" y1="265.6" x2="94.0" y2="265.6" stroke="#a3be8c" stroke-width="1.5"/>
+<line x1="86.0" y1="251.6" x2="94.0" y2="251.6" stroke="#a3be8c" stroke-width="1.5"/>
+<circle cx="90.0" cy="258.3" r="5" fill="#a3be8c"><title>v3, Thread=4: 0.595</title></circle>
+<line x1="680.0" y1="236.9" x2="680.0" y2="212.7" stroke="#a3be8c" stroke-width="1.5"/>
+<line x1="676.0" y1="236.9" x2="684.0" y2="236.9" stroke="#a3be8c" stroke-width="1.5"/>
+<line x1="676.0" y1="212.7" x2="684.0" y2="212.7" stroke="#a3be8c" stroke-width="1.5"/>
+<circle cx="680.0" cy="223.5" r="5" fill="#a3be8c"><title>v3, Thread=8: 0.704</title></circle>
+<line x1="708" y1="132" x2="732" y2="132" stroke="#a3be8c" stroke-width="2.5"/>
+<circle cx="720" cy="132" r="4" fill="#a3be8c"/>
+<text x="742" y="136" font-family="sans-serif" font-size="13">v3</text>
+<line x1="90.0" y1="251.0" x2="680.0" y2="211.1" stroke="#d08770" stroke-width="2.5"/>
+<line x1="90.0" y1="257.3" x2="90.0" y2="244.6" stroke="#d08770" stroke-width="1.5"/>
+<line x1="86.0" y1="257.3" x2="94.0" y2="257.3" stroke="#d08770" stroke-width="1.5"/>
+<line x1="86.0" y1="244.6" x2="94.0" y2="244.6" stroke="#d08770" stroke-width="1.5"/>
+<circle cx="90.0" cy="251.0" r="5" fill="#d08770"><title>v4, Thread=4: 0.618</title></circle>
+<line x1="680.0" y1="224.2" x2="680.0" y2="209.5" stroke="#d08770" stroke-width="1.5"/>
+<line x1="676.0" y1="224.2" x2="684.0" y2="224.2" stroke="#d08770" stroke-width="1.5"/>
+<line x1="676.0" y1="209.5" x2="684.0" y2="209.5" stroke="#d08770" stroke-width="1.5"/>
+<circle cx="680.0" cy="211.1" r="5" fill="#d08770"><title>v4, Thread=8: 0.743</title></circle>
+<line x1="708" y1="158" x2="732" y2="158" stroke="#d08770" stroke-width="2.5"/>
+<circle cx="720" cy="158" r="4" fill="#d08770"/>
+<text x="742" y="162" font-family="sans-serif" font-size="13">v4</text>
+</svg>

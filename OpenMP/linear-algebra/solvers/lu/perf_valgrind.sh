@@ -17,11 +17,18 @@ CC="${CC:-gcc}"
 CFLAGS="${CFLAGS:--O2 -g}"
 OMPFLAGS="${OMPFLAGS:--fopenmp}"
 PERF_EVENTS="${PERF_EVENTS:-task-clock,cycles,instructions,cache-references,cache-misses,branch-misses}"
+LU_VERSIONS="${LU_VERSIONS:-v0 v2 v2_simd v2_recip v2_hoist v2_rows v2_restrict v3 v4}"
+LU_APPEND="${LU_APPEND:-0}"
+CSV_HEADER="tool,version,n,threads,rep,wall_seconds,task_clock_ms,cycles,instructions,cache_references,cache_misses,branch_misses,vg_ir,vg_i1mr,vg_ilmr,vg_dr,vg_d1mr,vg_dlmr,vg_dw,vg_d1mw,vg_dlmw,exit_status"
 
 export LC_ALL=C
 
 if [[ ! "$PERF_REPS" =~ ^[1-9][0-9]*$ || ! "$VALGRIND_REPS" =~ ^[1-9][0-9]*$ ]]; then
   echo "Errore: il numero di ripetizioni deve essere un intero positivo." >&2
+  exit 2
+fi
+if [[ "$LU_APPEND" != 0 && "$LU_APPEND" != 1 ]]; then
+  echo "Errore: LU_APPEND deve essere 0 oppure 1." >&2
   exit 2
 fi
 
@@ -67,9 +74,40 @@ read -r -a OMPFLAGS_ARRAY <<< "$OMPFLAGS"
 SOURCES=(
   "v0:$SCRIPT_DIR/lu.c"
   "v2:$SCRIPT_DIR/lu_v2.c"
+  "v2_simd:$SCRIPT_DIR/lu_v2_steps.c:1"
+  "v2_recip:$SCRIPT_DIR/lu_v2_steps.c:2"
+  "v2_hoist:$SCRIPT_DIR/lu_v2_steps.c:3"
+  "v2_rows:$SCRIPT_DIR/lu_v2_steps.c:4"
+  "v2_restrict:$SCRIPT_DIR/lu_v2_steps.c:5"
   "v3:$SCRIPT_DIR/lu_v3.c"
   "v4:$SCRIPT_DIR/lu_v4.c"
 )
+read -r -a REQUESTED_VERSIONS <<< "$LU_VERSIONS"
+if (("${#REQUESTED_VERSIONS[@]}" == 0)); then
+  echo "Errore: specificare almeno una versione in LU_VERSIONS." >&2
+  exit 2
+fi
+SELECTED_SOURCES=()
+for requested in "${REQUESTED_VERSIONS[@]}"; do
+  found=0
+  for entry in "${SOURCES[@]}"; do
+    if [[ "${entry%%:*}" == "$requested" ]]; then
+      found=1
+      for selected in ${SELECTED_SOURCES[@]+"${SELECTED_SOURCES[@]}"}; do
+        if [[ "${selected%%:*}" == "$requested" ]]; then
+          echo "Errore: versione ripetuta: '$requested'." >&2
+          exit 2
+        fi
+      done
+      SELECTED_SOURCES+=( "$entry" )
+      break
+    fi
+  done
+  if ((found == 0)); then
+    echo "Errore: versione sconosciuta: '$requested'." >&2
+    exit 2
+  fi
+done
 BINS=()
 SIZES=()
 
@@ -100,18 +138,75 @@ for dataset in "${DATASETS[@]}"; do
   done
   SIZES+=( "$N" )
 
-  for entry in "${SOURCES[@]}"; do
+  for entry in "${SELECTED_SOURCES[@]}"; do
     version="${entry%%:*}"
-    source_file="${entry#*:}"
+    source_info="${entry#*:}"
+    source_file="${source_info%%:*}"
+    step_flag=()
+    if [[ "$source_info" == *:* ]]; then
+      step_flag=("-DLU_STEP=${source_info##*:}")
+    fi
     binary="$TMP_DIR/lu_${version}_n${N}"
     echo "Compilo $version, dataset=$dataset, N=$N..." >&2
-    "$CC" "${CFLAGS_ARRAY[@]}" "${OMPFLAGS_ARRAY[@]}" "$size_flag" \
+    "$CC" "${CFLAGS_ARRAY[@]}" "${OMPFLAGS_ARRAY[@]}" "$size_flag" ${step_flag[@]+"${step_flag[@]}"} \
       -I"$UTIL_DIR" "$source_file" "$UTIL_DIR/polybench.c" -lm -o "$binary"
     BINS+=( "$version:$N:$binary" )
   done
 done
 
-echo "tool,version,n,threads,rep,wall_seconds,task_clock_ms,cycles,instructions,cache_references,cache_misses,branch_misses,vg_ir,vg_i1mr,vg_ilmr,vg_dr,vg_d1mr,vg_dlmr,vg_dw,vg_d1mw,vg_dlmw,exit_status" > "$OUT"
+if [[ "$LU_APPEND" == 1 ]]; then
+  if [[ ! -f "$OUT" ]]; then
+    echo "Errore: LU_APPEND=1 richiede un CSV esistente: $OUT" >&2
+    exit 2
+  fi
+  plan="$TMP_DIR/planned.csv"
+  for item in "${BINS[@]}"; do
+    version="${item%%:*}"
+    remaining="${item#*:}"
+    N="${remaining%%:*}"
+    for thread_count in "${THREADS[@]}"; do
+      printf '%s,%s,%s\n' "$version" "$N" "$thread_count" >> "$plan"
+    done
+  done
+  if ! awk -F, -v expected="$CSV_HEADER" '
+    FNR == NR { planned[$1 "," $2 "," $3] = 1; next }
+    FNR == 1 {
+      header_seen = 1
+      if ($0 != expected) {
+        print "Errore: intestazione CSV incompatibile." > "/dev/stderr"
+        bad = 1
+      }
+      next
+    }
+    {
+      if (NF != 22) {
+        print "Errore: riga CSV incompleta o non valida: " FNR > "/dev/stderr"
+        bad = 1
+      }
+      if (planned[$2 "," $3 "," $4]) {
+        print "Errore: combinazione gia presente: " $2 ", N=" $3 ", thread=" $4 > "/dev/stderr"
+        bad = 1
+        exit
+      }
+    }
+    END {
+      if (!header_seen) {
+        print "Errore: CSV vuoto." > "/dev/stderr"
+        bad = 1
+      }
+      exit bad
+    }
+  ' "$plan" "$OUT"; then
+    exit 2
+  fi
+  last_byte="$(tail -c 1 "$OUT" | od -An -tu1 | tr -d '[:space:]')"
+  if [[ "$last_byte" != 10 ]]; then
+    printf '\n' >> "$OUT"
+  fi
+  echo "Aggiungo le nuove misure al CSV esistente: $OUT" >&2
+else
+  printf '%s\n' "$CSV_HEADER" > "$OUT"
+fi
 
 perf_values() {
   local perf_file="$1"

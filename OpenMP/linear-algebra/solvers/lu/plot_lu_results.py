@@ -11,10 +11,18 @@ from pathlib import Path
 from xml.sax.saxutils import escape
 
 
-VERSION_ORDER = ("v0", "v2", "v3", "v4")
+VERSION_ORDER = (
+    "v0", "v2", "v2_simd", "v2_recip", "v2_hoist", "v2_rows",
+    "v2_restrict", "v3", "v4",
+)
 COLORS = {
     "v0": "#4c566a",
     "v2": "#5e81ac",
+    "v2_simd": "#bf616a",
+    "v2_recip": "#b48ead",
+    "v2_hoist": "#8f6000",
+    "v2_rows": "#007d79",
+    "v2_restrict": "#ad4e87",
     "v3": "#a3be8c",
     "v4": "#d08770",
 }
