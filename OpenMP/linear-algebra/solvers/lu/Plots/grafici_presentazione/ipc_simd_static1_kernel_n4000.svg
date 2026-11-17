@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800" fill="#F7F8FC" role="img" aria-labelledby="title desc">
+  <title id="title">Median IPC from SIMD to static,1 for N=128 and N=4000</title>
+  <desc id="desc">Two lines show medians of per-run instructions divided by cycles for N=128 and N=4000, with four requested threads and three perf runs. Tables show IPC change and kernel time saved relative to SIMD for each dataset. IPC counts cover the entire process and runtime.</desc>
+  <style>text { font-family: Arial, Helvetica, sans-serif; } .muted { fill: #BEC4D9; } .grid { stroke: #3A4164; stroke-width: 1.4; }</style>
+  <rect width="1200" height="800" rx="24" fill="#151832"/>
+  <text x="600" y="46" text-anchor="middle" font-size="29" font-weight="700">IPC across optimization stages</text>
+  <text x="600" y="78" text-anchor="middle" font-size="17" class="muted">4 threads requested · median of 3 perf runs · IPC = instructions / cycles</text>
+  <line x1="415" y1="110" x2="450" y2="110" stroke="#55D6E8" stroke-width="4"/><circle cx="432" cy="110" r="6" fill="#55D6E8"/>
+  <text x="462" y="116" font-size="17" fill="#55D6E8">N = 128</text>
+  <line x1="635" y1="110" x2="670" y2="110" stroke="#9DE3C3" stroke-width="4"/><circle cx="652" cy="110" r="6" fill="#9DE3C3"/>
+  <text x="682" y="116" font-size="17" fill="#9DE3C3">N = 4000</text>
+  <g class="grid">
+    <line x1="150" y1="150" x2="1125" y2="150"/><line x1="150" y1="200" x2="1125" y2="200"/>
+    <line x1="150" y1="250" x2="1125" y2="250"/><line x1="150" y1="300" x2="1125" y2="300"/>
+    <line x1="150" y1="350" x2="1125" y2="350"/><line x1="150" y1="400" x2="1125" y2="400"/>
+    <line x1="150" y1="450" x2="1125" y2="450"/>
+  </g>
+  <g font-size="15" class="muted" text-anchor="end">
+    <text x="138" y="155">1.5</text><text x="138" y="205">1.25</text>
+    <text x="138" y="255">1.0</text><text x="138" y="305">0.75</text>
+    <text x="138" y="355">0.5</text><text x="138" y="405">0.25</text><text x="138" y="455">0.0</text>
+  </g>
+  <line x1="150" y1="150" x2="150" y2="450" stroke="#BEC4D9" stroke-width="1.5"/>
+  <line x1="150" y1="450" x2="1125" y2="450" stroke="#BEC4D9" stroke-width="1.5"/>
+  <path d="M225 196.5103 L365 194.8415 L505 197.6645 L645 203.6963 L785 204.9309 L925 200.3707 L1065 256.0499" fill="none" stroke="#55D6E8" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M225 350.6514 L365 350.4546 L505 368.8573 L645 369.1207 L785 369.1766 L925 369.0568 L1065 369.1137" fill="none" stroke="#9DE3C3" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <g fill="#55D6E8">
+    <circle cx="225" cy="196.5103" r="6"/><circle cx="365" cy="194.8415" r="6"/><circle cx="505" cy="197.6645" r="6"/><circle cx="645" cy="203.6963" r="6"/><circle cx="785" cy="204.9309" r="6"/><circle cx="925" cy="200.3707" r="6"/><circle cx="1065" cy="256.0499" r="6"/>
+  </g>
+  <g fill="#9DE3C3">
+    <circle cx="225" cy="350.6514" r="6"/><circle cx="365" cy="350.4546" r="6"/><circle cx="505" cy="368.8573" r="6"/><circle cx="645" cy="369.1207" r="6"/><circle cx="785" cy="369.1766" r="6"/><circle cx="925" cy="369.0568" r="6"/><circle cx="1065" cy="369.1137" r="6"/>
+  </g>
+  <g text-anchor="middle" font-size="15" class="muted">
+    <text x="225" y="480">SIMD</text><text x="365" y="480">+ reciprocal</text><text x="505" y="480">+ hoisting</text><text x="645" y="480">+ row pointers</text><text x="785" y="480">+ restrict</text><text x="925" y="480">static</text><text x="1065" y="480">static,1</text>
+  </g>
+  <g font-size="13" class="muted">
+    <text x="25" y="518">IPC · N=128</text><text x="25" y="545">IPC · N=4000</text>
+    <text x="25" y="581">IPC Δ · N=128</text><text x="25" y="608">IPC Δ · N=4000</text>
+    <text x="25" y="644">Time saved · N=128</text><text x="25" y="671">Time saved · N=4000</text>
+  </g>
+  <g text-anchor="middle" font-size="14" fill="#55D6E8">
+    <text x="225" y="518">1.267</text><text x="365" y="518">1.276</text><text x="505" y="518">1.262</text><text x="645" y="518">1.232</text><text x="785" y="518">1.225</text><text x="925" y="518">1.248</text><text x="1065" y="518">0.970</text>
+    <text x="225" y="581">0.00%</text><text x="365" y="581">+0.66%</text><text x="505" y="581">−0.46%</text><text x="645" y="581">−2.83%</text><text x="785" y="581">−3.32%</text><text x="925" y="581">−1.52%</text><text x="1065" y="581">−23.49%</text>
+    <text x="225" y="644">0.00%</text><text x="365" y="644">+0.57%</text><text x="505" y="644">+5.20%</text><text x="645" y="644">+6.11%</text><text x="785" y="644">+9.16%</text><text x="925" y="644">+7.35%</text><text x="1065" y="644">−37.90%</text>
+  </g>
+  <g text-anchor="middle" font-size="14" fill="#9DE3C3">
+    <text x="225" y="545">0.497</text><text x="365" y="545">0.498</text><text x="505" y="545">0.406</text><text x="645" y="545">0.404</text><text x="785" y="545">0.404</text><text x="925" y="545">0.405</text><text x="1065" y="545">0.404</text>
+    <text x="225" y="608">0.00%</text><text x="365" y="608">+0.20%</text><text x="505" y="608">−18.33%</text><text x="645" y="608">−18.59%</text><text x="785" y="608">−18.65%</text><text x="925" y="608">−18.53%</text><text x="1065" y="608">−18.58%</text>
+    <text x="225" y="671">0.000%</text><text x="365" y="671">−0.003%</text><text x="505" y="671">+0.704%</text><text x="645" y="671">+0.749%</text><text x="785" y="671">+0.764%</text><text x="925" y="671">+0.751%</text><text x="1065" y="671">+0.896%</text>
+  </g>
+  <rect x="65" y="695" width="1070" height="82" rx="14" fill="#1C2040"/>
+  <text x="90" y="719" font-size="14" class="muted">Percentages compare each median with SIMD at the same N; positive time saved means faster.</text>
+  <text x="90" y="741" font-size="14" class="muted">IPC counts cover the whole process, including OpenMP runtime; IPC is not itself a speedup metric.</text>
+  <text x="90" y="763" font-size="14" class="muted">N=128 is sensitive to startup and timer precision. Source: lu_kernel_results.csv; three runs.</text>
+</svg>

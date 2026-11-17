@@ -161,7 +161,7 @@ for (int i = k + 1; i < n; i++) {
 
 Usare una macchina Linux con `perf`, Valgrind (strumento Cachegrind) e un compilatore C con supporto OpenMP. `perf` deve poter accedere ai contatori hardware: disponibilità degli eventi e permessi dipendono dalla macchina e dalla sua configurazione. macOS non fornisce normalmente il `perf` di Linux; per queste misure usare un ambiente Linux compatibile con entrambi gli strumenti. La presenza dei comandi non garantisce che tutti gli eventi siano supportati o accessibili.
 
-Lo script [`perf_valgrind.sh`](./perf_valgrind.sh) compila nove binari per dataset: `v0`, `v2`, i cinque passaggi intermedi, `v3` e `v4`, insieme a `polybench.c`; la versione 1 non ha una sorgente separata. Per default usa tutti e cinque i dataset di [`lu.h`](./lu.h): MINI (32), SMALL (128), STANDARD (1024), LARGE (2000), EXTRALARGE (4000). Le dimensioni sono ricavate dal preprocessore del compilatore, così restano coerenti con il file `.h`. Per le compilazioni segue i valori predefiniti del Makefile (`gcc`, `-O2 -g -fopenmp` e `-lm`) e prova per default prima 4 e poi 8 thread. Eseguire i confronti sulla stessa macchina, con le stesse opzioni e lo stesso `N`. Se necessario, si possono impostare `CC`, `CFLAGS` e `OMPFLAGS` nell'ambiente prima del comando.
+Lo script [`perf_valgrind.sh`](./perf_valgrind.sh) compila nove binari per dataset: `v0`, `v2`, i cinque passaggi intermedi, `v3` e `v4`, insieme a `polybench.c`; la versione 1 non ha una sorgente separata. Per default usa tutti e cinque i dataset di [`lu.h`](./lu.h): MINI (32), SMALL (128), STANDARD (1024), LARGE (2000), EXTRALARGE (4000). Le dimensioni sono ricavate dal preprocessore del compilatore, così restano coerenti con il file `.h`. Per le compilazioni usa `gcc`, `-O2 -g -fopenmp` e `-lm`, con il timer PolyBench abilitato. Richiede per default **4 thread e 3 ripetizioni** per ciascuno strumento. Eseguire i confronti sulla stessa macchina, con le stesse opzioni e lo stesso `N`. Se necessario, si possono impostare `CC`, `CFLAGS` e `OMPFLAGS` nell'ambiente prima del comando.
 
 **Correttezza prima delle prestazioni:** l'inizializzazione corrente produce una matrice di rango uno, quindi singolare per `N > 1`. La LU senza pivoting può incontrare pivot nulli o numericamente molto piccoli, producendo valori non finiti o risultati instabili. Lo script non verifica la correttezza né il residuo: confrontare le prestazioni non dimostra che la fattorizzazione sia valida. Per una valutazione attendibile del kernel, verificare separatamente il risultato rispetto a un riferimento e il residuo su matrici con pivot non nulli, usando lo stesso input per ogni versione; il solo confronto dell'output stampato a due decimali non basta.
 
@@ -178,60 +178,54 @@ I parametri sono posizionali e hanno questi valori predefiniti:
 | Parametro | Default | Significato |
 |---|---:|---|
 | `DATASETS` | `"MINI SMALL STANDARD LARGE EXTRALARGE"` | Elenco dei dataset di `lu.h` o dimensioni numeriche, tra virgolette |
-| `PERF_REPS` | `5` | Ripetizioni di `perf` per versione e numero di thread |
-| `THREADS` | `"4 8"` | Elenco ordinato dei valori di `OMP_NUM_THREADS`, tra virgolette |
-| `OUT.csv` | `lu_results.csv` | File CSV; se esiste, viene sovrascritto |
-| `VALGRIND_REPS` | `1` | Ripetizioni di Cachegrind per versione e numero di thread |
+| `PERF_REPS` | `3` | Ripetizioni di `perf` per versione e numero di thread |
+| `THREADS` | `"4"` | Elenco dei valori richiesti di `OMP_NUM_THREADS`, tra virgolette |
+| `OUT.csv` | `lu_kernel_results.csv` | Nuovo CSV; un file esistente non viene sovrascritto |
+| `VALGRIND_REPS` | `3` | Ripetizioni Cachegrind; `0` le disabilita |
 
 Per una prima prova, su una matrice piccola (è ancora possibile specificare direttamente `128` come primo argomento):
 
 ```bash
-./perf_valgrind.sh MINI 3 "4 8" lu_prova.csv 1
+./perf_valgrind.sh MINI 3 4 lu_prova_kernel.csv 0
 ```
 
 Per misurare tutti e cinque i dataset nello stesso CSV:
 
 ```bash
 OMP_DYNAMIC=FALSE OMP_PROC_BIND=TRUE OMP_PLACES=cores \
-  ./perf_valgrind.sh "" 5 "4 8" lu_steps_results.csv 1
+  ./perf_valgrind.sh
 ```
 
-Il nome distinto preserva il CSV precedente: lo script sovrascrive il file di output scelto. Con i default sono previste 450 esecuzioni `perf` e 90 Cachegrind; la seconda esecuzione può richiedere moltissimo tempo, in particolare per EXTRALARGE. Un sottoinsieme si può selezionare con, ad esempio, `"MINI SMALL STANDARD"`. L'impostazione di `OMP_DYNAMIC=FALSE` e dell'affinità aiuta a rendere i test ripetibili; annotare CPU, compilatore, opzioni, sistema, numero di core e variabili OpenMP usate. Limitare gli altri carichi sulla macchina e ripetere l'esperimento in condizioni analoghe.
-
-#### Aggiungere solo le versioni intermedie a risultati esistenti
-
-Per conservare il CSV originale, crearne una copia e aggiungere i nuovi risultati alla copia:
+Con i default sono previste **135 esecuzioni `perf` e 135 Cachegrind**; Cachegrind può richiedere moltissimo tempo, soprattutto per EXTRALARGE. Per misurare soltanto con `perf`, senza richiedere Valgrind:
 
 ```bash
-cp -n lu_results.csv lu_results_con_intermedie.csv
-LU_APPEND=1 LU_VERSIONS="v2_simd v2_recip v2_hoist v2_rows v2_restrict" \
-  OMP_DYNAMIC=FALSE OMP_PROC_BIND=TRUE OMP_PLACES=cores \
-  ./perf_valgrind.sh "" 5 "4 8" lu_results_con_intermedie.csv 1
-python3 plot_lu_results.py lu_results_con_intermedie.csv
+OMP_PROC_BIND=TRUE OMP_PLACES=cores \
+  ./perf_valgrind.sh "" 3 4 lu_kernel_perf.csv 0
 ```
 
-`LU_VERSIONS` seleziona i binari da misurare; `LU_APPEND=1` richiede un CSV esistente con l'intestazione prevista e rifiuta combinazioni versione/dimensione/thread già presenti. Con tutti i dataset sono previste **250 esecuzioni perf e 50 Cachegrind**, senza ripetere v0, v2, v3 o v4. L'aggiunta non riempie le eventuali misure Cachegrind mancanti delle vecchie versioni.
+Un sottoinsieme si può selezionare, per esempio, con `"MINI SMALL STANDARD"` e `LU_VERSIONS="v0 v2 v2_simd v3 v4"`. Lo script imposta `OMP_DYNAMIC=FALSE`; per ripetibilità scegliere anche un'affinità adatta alla macchina e annotare CPU, compilatore, flag, sistema, core e variabili OpenMP. Il valore 4 è richiesto, non verificato come dimensione effettiva del team.
 
-Il CSV non registra compilatore, flag, input, affinità o condizioni della macchina: l'append non può verificarne la compatibilità. Usare le stesse impostazioni e macchina della campagna originale e segnalare che i test provengono da sessioni diverse. Se interrotto, il file contiene risultati parziali; il comando non riprende automaticamente e un nuovo append con combinazioni già presenti viene rifiutato. Conservare la copia originale per ripartire, oppure preparare una copia ripulita dopo aver verificato le righe. Senza `LU_APPEND=1`, l'output continua a essere sovrascritto.
+`LU_APPEND=1` consente di aggiungere combinazioni assenti a un CSV con il **nuovo** schema. I vecchi CSV non contengono `kernel_seconds` e vengono rifiutati, per non mescolare misure incompatibili. L'append non verifica macchina, flag o condizioni. Se una prova fallisce lo script si ferma segnalando l'errore e il file può restare parziale; non riprende automaticamente combinazioni già presenti.
 
 ### Lettura del CSV e confronto
 
 Ogni riga rappresenta una combinazione di `tool`, `version`, `n`, `threads` e `rep`. `v0` è seriale: viene comunque eseguita per ogni valore di `threads`, ma non usa più thread per il kernel. Controllare `exit_status`: usare solo esecuzioni riuscite (`0`) e considerare le celle vuote come dati mancanti, non come zeri. Messaggi di avviso, contatori assenti o errori di permesso rendono la relativa misura inutilizzabile; verificare la disponibilità degli eventi prima di trarre conclusioni.
 
-- Le righe `perf` riportano il tempo trascorso in `wall_seconds`, `task_clock_ms`, cicli, istruzioni, riferimenti e miss di cache e branch miss, quando disponibili. `wall_seconds` misura l'intera invocazione di `perf` e del programma, incluso l'avvio e l'inizializzazione: **non è il tempo del solo kernel**. L'overhead può incidere soprattutto per input piccoli. `task_clock_ms` è tempo CPU aggregato, non tempo trascorso, e può aumentare usando più thread.
-- Le righe `valgrind` riportano i contatori Cachegrind: `vg_ir` istruzioni, `vg_dr`/`vg_dw` letture/scritture dati, e i rispettivi miss simulati `i1`, `d1` e `il`/`dl` (ultimo livello). Sono stime della cache simulata, non misure dei contatori hardware. Valgrind può alterare notevolmente tempi e scheduling dei thread: non confrontare il suo `wall_seconds` con il tempo nativo né usarlo per calcolare speedup paralleli.
+- `kernel_seconds` è il tempo trascorso tra `polybench_start_instruments` e `polybench_stop_instruments`, attorno alla chiamata `kernel_lu`: esclude inizializzazione, stampa e deallocazione, ma comprende chiamata, creazione del team OpenMP e sincronizzazioni. PolyBench usa `gettimeofday` e stampa sei decimali; non è un clock monotono e la precisione effettiva, soprattutto per dataset piccoli, è limitata. Lo script disabilita il flush cache PolyBench prima del timer, per evitare che crei un team OpenMP prima del kernel.
+- Le righe `perf` riportano anche `wall_seconds`, l'intera invocazione di `perf` e del programma, oltre a `task_clock_ms`, cicli, istruzioni, riferimenti/miss di cache e branch miss, quando disponibili. Anche `kernel_seconds` è rilevato **durante** `perf` e può risentirne. `task_clock_ms` è tempo CPU aggregato, non tempo trascorso.
+- Le righe `valgrind` riportano i contatori Cachegrind: `vg_ir` istruzioni, `vg_dr`/`vg_dw` letture/scritture dati e miss simulati. Valgrind altera tempi e scheduling: **non usare né `kernel_seconds` né `wall_seconds` di queste righe come tempi nativi o per speedup**.
 - I contatori riguardano l'intero processo, non soltanto il kernel. Su più thread riflettono anche il runtime OpenMP; eventi diversi possono essere indisponibili o avere significati dipendenti dalla CPU. Un numero inferiore di miss o istruzioni non implica necessariamente un tempo inferiore.
 
-Per ogni `N` e versione, confrontare la **mediana** delle ripetizioni riuscite di `perf` e riportare anche la variabilità. A parità di condizioni, calcolare lo speedup come `mediana(wall_seconds di v0 con lo stesso numero di thread) / mediana(wall_seconds della versione)`. Il confronto usa v0 misurata con lo stesso valore di `OMP_NUM_THREADS`, così da mantenere uguali le condizioni di avvio; v0 resta seriale. Sono speedup del processo misurato, comprensivi dell'overhead indicato sopra, non del solo kernel. Confrontare v0→v2 per l'effetto del parallelismo con un team persistente, poi v2→v3 per le ottimizzazioni aritmetiche/SIMD, e v3→v4 per l'effetto di `static,1`. Differenze inferiori alla variabilità delle misure non dimostrano un miglioramento.
+Per ogni `N` e versione, confrontare la **mediana di `kernel_seconds` delle tre righe `perf`** e riportare anche min–max. Calcolare lo speedup come `mediana(kernel_seconds di v0) / mediana(kernel_seconds della versione)` con lo stesso `N` e le stesse condizioni. `v0` resta seriale. Tre prove non bastano per conclusioni statistiche robuste; i contatori di processo non isolano il kernel.
 
 ### Grafici
 
-Il generatore [`plot_lu_results.py`](./plot_lu_results.py) usa solo la libreria standard Python e produce grafici SVG: tempi wall mediani per versione (con barre min-max delle ripetizioni), speedup rispetto a v0 allo stesso numero di thread e, se disponibili, istruzioni Cachegrind. Produce anche un grafico dei tempi e uno dello speedup **al variare di N per ogni numero di thread**; l'asse delle dimensioni mostra categorie equidistanti, quello dei tempi usa una scala logaritmica. Legge solo righe `perf`/`valgrind` con `exit_status=0`, ignora valori mancanti e separa i grafici per dimensione `N`.
+Il generatore esistente [`plot_lu_results.py`](./plot_lu_results.py) usa **`wall_seconds`, non `kernel_seconds`**. Anche se accetta il nuovo CSV, i suoi grafici temporali e speedup restano relativi all'intero processo: non presentarli come misure del kernel.
 
 ```bash
-python3 plot_lu_results.py lu_results.csv
+python3 plot_lu_results.py lu_kernel_results.csv
 # Opzionale: scegliere la cartella di destinazione
-python3 plot_lu_results.py lu_results.csv --output-dir grafici
+python3 plot_lu_results.py lu_kernel_results.csv --output-dir grafici
 ```
 
 Le ripetizioni riuscite vengono aggregate con la mediana. Un grafico Cachegrind descrive istruzioni simulate e non va interpretato come misura dei tempi nativi.

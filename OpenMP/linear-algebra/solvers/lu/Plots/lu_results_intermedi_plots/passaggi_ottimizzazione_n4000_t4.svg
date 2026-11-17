@@ -1,0 +1,75 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="600" viewBox="0 0 1000 600">
+<title>LU: passaggi di ottimizzazione — N=4000, 4 thread</title><rect width="100%" height="100%" fill="white"/>
+<text x="500" y="30" text-anchor="middle" font-family="sans-serif" font-size="21" font-weight="bold">LU: passaggi di ottimizzazione — N=4000, 4 thread</text>
+<text x="500" y="54" text-anchor="middle" font-family="sans-serif" font-size="13" fill="#4c566a">Punti=mediane di 5 prove; barre=min–max; i segmenti interrotti separano campagne diverse</text>
+<line x1="90" y1="500" x2="780" y2="500" stroke="#e5e9f0"/>
+<text x="78" y="504" text-anchor="end" font-family="sans-serif" font-size="12">10 s</text>
+<line x1="90" y1="76" x2="780" y2="76" stroke="#e5e9f0"/>
+<text x="78" y="80" text-anchor="end" font-family="sans-serif" font-size="12">100 s</text>
+<line x1="90" y1="76" x2="90" y2="500" stroke="#4c566a"/>
+<line x1="90" y1="500" x2="780" y2="500" stroke="#4c566a"/>
+<line x1="90" y1="500" x2="90" y2="505" stroke="#4c566a"/>
+<text x="90" y="524" text-anchor="middle" font-family="sans-serif" font-size="12">v2</text>
+<line x1="188.57142857142856" y1="500" x2="188.57142857142856" y2="505" stroke="#4c566a"/>
+<text x="188.57142857142856" y="524" text-anchor="middle" font-family="sans-serif" font-size="12">SIMD</text>
+<line x1="287.1428571428571" y1="500" x2="287.1428571428571" y2="505" stroke="#4c566a"/>
+<text x="287.1428571428571" y="524" text-anchor="middle" font-family="sans-serif" font-size="12">reciproco</text>
+<line x1="385.7142857142857" y1="500" x2="385.7142857142857" y2="505" stroke="#4c566a"/>
+<text x="385.7142857142857" y="524" text-anchor="middle" font-family="sans-serif" font-size="12">hoisting</text>
+<line x1="484.2857142857143" y1="500" x2="484.2857142857143" y2="505" stroke="#4c566a"/>
+<text x="484.2857142857143" y="524" text-anchor="middle" font-family="sans-serif" font-size="12">puntatori</text>
+<line x1="582.8571428571429" y1="500" x2="582.8571428571429" y2="505" stroke="#4c566a"/>
+<text x="582.8571428571429" y="524" text-anchor="middle" font-family="sans-serif" font-size="12">restrict</text>
+<line x1="681.4285714285714" y1="500" x2="681.4285714285714" y2="505" stroke="#4c566a"/>
+<text x="681.4285714285714" y="524" text-anchor="middle" font-family="sans-serif" font-size="12">v3 static</text>
+<line x1="780" y1="500" x2="780" y2="505" stroke="#4c566a"/>
+<text x="780" y="524" text-anchor="middle" font-family="sans-serif" font-size="12">v4 static,1</text>
+<text x="435" y="572" text-anchor="middle" font-family="sans-serif" font-size="14">Versione / ottimizzazione cumulativa</text>
+<text x="24" y="288" text-anchor="middle" transform="rotate(-90 24 288)" font-family="sans-serif" font-size="14">wall_seconds (scala logaritmica)</text>
+<line x1="90" y1="248.05722968097768" x2="90" y2="240.935723253059" stroke="#4c566a" stroke-width="1.5"/>
+<line x1="85" y1="248.05722968097768" x2="95" y2="248.05722968097768" stroke="#4c566a"/>
+<line x1="85" y1="240.935723253059" x2="95" y2="240.935723253059" stroke="#4c566a"/>
+<circle cx="90" cy="247.97287318235576" r="5" fill="#4c566a"><title>v2, v2: 39.301 s; min 39.283, max 40.832</title></circle>
+<line x1="806" y1="96" x2="830" y2="96" stroke="#4c566a" stroke-width="2.5"/>
+<circle cx="818" cy="96" r="4" fill="#4c566a"/>
+<text x="838" y="100" font-family="sans-serif" font-size="12">v2 (campagna iniziale)</text>
+<line x1="188.57142857142856" y1="190.21335776220405" x2="188.57142857142856" y2="188.45165473136703" stroke="#bf616a" stroke-width="1.5"/>
+<line x1="183.57142857142856" y1="190.21335776220405" x2="193.57142857142856" y2="190.21335776220405" stroke="#bf616a"/>
+<line x1="183.57142857142856" y1="188.45165473136703" x2="193.57142857142856" y2="188.45165473136703" stroke="#bf616a"/>
+<circle cx="188.57142857142856" cy="189.27759040601836" r="5" fill="#bf616a"><title>v2_simd, SIMD: 54.055 s; min 53.781, max 54.298</title></circle>
+<line x1="188.57142857142856" y1="189.27759040601836" x2="287.1428571428571" y2="189.82686275675394" stroke="#bf616a" stroke-width="2.5"/>
+<line x1="287.1428571428571" y1="190.71049398766257" x2="287.1428571428571" y2="189.0494931354441" stroke="#bf616a" stroke-width="1.5"/>
+<line x1="282.1428571428571" y1="190.71049398766257" x2="292.1428571428571" y2="190.71049398766257" stroke="#bf616a"/>
+<line x1="282.1428571428571" y1="189.0494931354441" x2="292.1428571428571" y2="189.0494931354441" stroke="#bf616a"/>
+<circle cx="287.1428571428571" cy="189.82686275675394" r="5" fill="#bf616a"><title>v2_simd, reciproco: 53.894 s; min 53.636, max 54.122</title></circle>
+<line x1="287.1428571428571" y1="189.82686275675394" x2="385.7142857142857" y2="191.48113170001756" stroke="#bf616a" stroke-width="2.5"/>
+<line x1="385.7142857142857" y1="191.81239486167777" x2="385.7142857142857" y2="190.7001948018108" stroke="#bf616a" stroke-width="1.5"/>
+<line x1="380.7142857142857" y1="191.81239486167777" x2="390.7142857142857" y2="191.81239486167777" stroke="#bf616a"/>
+<line x1="380.7142857142857" y1="190.7001948018108" x2="390.7142857142857" y2="190.7001948018108" stroke="#bf616a"/>
+<circle cx="385.7142857142857" cy="191.48113170001756" r="5" fill="#bf616a"><title>v2_simd, hoisting: 53.412 s; min 53.316, max 53.639</title></circle>
+<line x1="385.7142857142857" y1="191.48113170001756" x2="484.2857142857143" y2="190.8203878277475" stroke="#bf616a" stroke-width="2.5"/>
+<line x1="484.2857142857143" y1="192.18231889230697" x2="484.2857142857143" y2="190.12778010707788" stroke="#bf616a" stroke-width="1.5"/>
+<line x1="479.2857142857143" y1="192.18231889230697" x2="489.2857142857143" y2="192.18231889230697" stroke="#bf616a"/>
+<line x1="479.2857142857143" y1="190.12778010707788" x2="489.2857142857143" y2="190.12778010707788" stroke="#bf616a"/>
+<circle cx="484.2857142857143" cy="190.8203878277475" r="5" fill="#bf616a"><title>v2_simd, puntatori: 53.604 s; min 53.209, max 53.806</title></circle>
+<line x1="484.2857142857143" y1="190.8203878277475" x2="582.8571428571429" y2="190.93722193790762" stroke="#bf616a" stroke-width="2.5"/>
+<line x1="582.8571428571429" y1="191.70190757998486" x2="582.8571428571429" y2="190.7551304507281" stroke="#bf616a" stroke-width="1.5"/>
+<line x1="577.8571428571429" y1="191.70190757998486" x2="587.8571428571429" y2="191.70190757998486" stroke="#bf616a"/>
+<line x1="577.8571428571429" y1="190.7551304507281" x2="587.8571428571429" y2="190.7551304507281" stroke="#bf616a"/>
+<circle cx="582.8571428571429" cy="190.93722193790762" r="5" fill="#bf616a"><title>v2_simd, restrict: 53.570 s; min 53.348, max 53.623</title></circle>
+<line x1="806" y1="121" x2="830" y2="121" stroke="#bf616a" stroke-width="2.5"/>
+<circle cx="818" cy="121" r="4" fill="#bf616a"/>
+<text x="838" y="125" font-family="sans-serif" font-size="12">varianti intermedie (campagna successiva)</text>
+<line x1="681.4285714285714" y1="251.74073784369912" x2="681.4285714285714" y2="246.8704258132304" stroke="#5e81ac" stroke-width="1.5"/>
+<line x1="676.4285714285714" y1="251.74073784369912" x2="686.4285714285714" y2="251.74073784369912" stroke="#5e81ac"/>
+<line x1="676.4285714285714" y1="246.8704258132304" x2="686.4285714285714" y2="246.8704258132304" stroke="#5e81ac"/>
+<circle cx="681.4285714285714" cy="251.44925090761546" r="5" fill="#5e81ac"><title>v3, v3 static: 38.566 s; min 38.505, max 39.537</title></circle>
+<line x1="681.4285714285714" y1="251.44925090761546" x2="780" y2="251.59254747809592" stroke="#5e81ac" stroke-width="2.5"/>
+<line x1="780" y1="251.76943363000112" x2="780" y2="246.2241782059758" stroke="#5e81ac" stroke-width="1.5"/>
+<line x1="775" y1="251.76943363000112" x2="785" y2="251.76943363000112" stroke="#5e81ac"/>
+<line x1="775" y1="246.2241782059758" x2="785" y2="246.2241782059758" stroke="#5e81ac"/>
+<circle cx="780" cy="251.59254747809592" r="5" fill="#5e81ac"><title>v3, v4 static,1: 38.536 s; min 38.499, max 39.676</title></circle>
+<line x1="806" y1="146" x2="830" y2="146" stroke="#5e81ac" stroke-width="2.5"/>
+<circle cx="818" cy="146" r="4" fill="#5e81ac"/>
+<text x="838" y="150" font-family="sans-serif" font-size="12">v3 e v4 (campagna iniziale)</text>
+</svg>

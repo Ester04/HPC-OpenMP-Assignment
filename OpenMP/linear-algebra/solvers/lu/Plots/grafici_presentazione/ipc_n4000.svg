@@ -1,0 +1,82 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="720" viewBox="0 0 1200 720" fill="#F7F8FC" role="img" aria-labelledby="title desc">
+  <title id="title">Median IPC across LU optimization stages, including the serial original</title>
+  <desc id="desc">Median of the per-run instructions divided by cycles for five perf runs at N=4000. Original is serial; 4 and 8 label separate measurement groups. Lines stop at campaign boundaries. IPC is not itself a speedup metric.</desc>
+  <defs>
+    <style>
+      text { font-family: Arial, Helvetica, sans-serif; }
+      .muted { fill: #BEC4D9; }
+      .grid { stroke: #3A4164; stroke-width: 1.4; }
+    </style>
+  </defs>
+  <rect width="1200" height="720" rx="24" fill="#151832"/>
+  <text x="600" y="44" text-anchor="middle" font-size="28" font-weight="700">Median IPC across optimization stages · N = 4000</text>
+  <text x="600" y="77" text-anchor="middle" font-size="17" class="muted">IPC = instructions / cycles · Median of five perf runs per configuration</text>
+  <g class="grid">
+    <line x1="135" y1="120" x2="1130" y2="120"/>
+    <line x1="135" y1="195" x2="1130" y2="195"/>
+    <line x1="135" y1="270" x2="1130" y2="270"/>
+    <line x1="135" y1="345" x2="1130" y2="345"/>
+    <line x1="135" y1="420" x2="1130" y2="420"/>
+  </g>
+  <g font-size="16" class="muted" text-anchor="end">
+    <text x="120" y="126">2.0</text><text x="120" y="201">1.5</text>
+    <text x="120" y="276">1.0</text><text x="120" y="351">0.5</text>
+    <text x="120" y="426">0.0</text>
+  </g>
+  <line x1="135" y1="120" x2="135" y2="420" stroke="#BEC4D9" stroke-width="1.5"/>
+  <line x1="135" y1="420" x2="1130" y2="420" stroke="#BEC4D9" stroke-width="1.5"/>
+  <line x1="335" y1="110" x2="335" y2="428" stroke="#FF647C" stroke-width="2" stroke-dasharray="7 7"/>
+  <line x1="900" y1="110" x2="900" y2="428" stroke="#FF647C" stroke-width="2" stroke-dasharray="7 7"/>
+  <text x="345" y="131" font-size="13" fill="#FF647C">campaign boundary</text>
+  <text x="910" y="131" font-size="13" fill="#FF647C">campaign boundary</text>
+
+  <path d="M170 133.28 L280 303.77" fill="none" stroke="#55D6E8" stroke-width="4" stroke-linecap="round"/>
+  <path d="M390 330.34 L500 330.28 L610 345.58 L720 345.57 L830 345.64" fill="none" stroke="#55D6E8" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M970 357.62 L1080 357.69" fill="none" stroke="#55D6E8" stroke-width="4" stroke-linecap="round"/>
+  <path d="M170 133.64 L280 306.12" fill="none" stroke="#9DE3C3" stroke-width="4" stroke-linecap="round"/>
+  <path d="M390 344.79 L500 344.89 L610 359.24 L720 359.26 L830 359.22" fill="none" stroke="#9DE3C3" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M970 361.04 L1080 361.07" fill="none" stroke="#9DE3C3" stroke-width="4" stroke-linecap="round"/>
+  <g fill="#55D6E8">
+    <circle cx="170" cy="133.28" r="6"/><circle cx="280" cy="303.77" r="6"/>
+    <circle cx="390" cy="330.34" r="6"/><circle cx="500" cy="330.28" r="6"/>
+    <circle cx="610" cy="345.58" r="6"/><circle cx="720" cy="345.57" r="6"/>
+    <circle cx="830" cy="345.64" r="6"/><circle cx="970" cy="357.62" r="6"/><circle cx="1080" cy="357.69" r="6"/>
+  </g>
+  <g fill="#9DE3C3">
+    <circle cx="170" cy="133.64" r="4"/><circle cx="280" cy="306.12" r="4"/>
+    <circle cx="390" cy="344.79" r="5"/><circle cx="500" cy="344.89" r="5"/>
+    <circle cx="610" cy="359.24" r="5"/><circle cx="720" cy="359.26" r="5"/>
+    <circle cx="830" cy="359.22" r="5"/><circle cx="970" cy="361.04" r="5"/><circle cx="1080" cy="361.07" r="5"/>
+  </g>
+  <g font-size="14" class="muted" text-anchor="middle">
+    <text x="170" y="451">Original</text><text x="280" y="451">OpenMP</text>
+    <text x="390" y="451">SIMD</text><text x="500" y="451">reciprocal</text>
+    <text x="610" y="451">hoisting</text><text x="720" y="451">row ptrs</text>
+    <text x="830" y="451">restrict</text><text x="970" y="451">static</text>
+    <text x="1080" y="451">static,1</text>
+  </g>
+  <text x="22" y="493" font-size="15" fill="#55D6E8">4 requested:</text>
+  <text x="170" y="493" text-anchor="middle" font-size="14" fill="#55D6E8">1.911</text>
+  <text x="280" y="493" text-anchor="middle" font-size="14" fill="#55D6E8">0.775</text>
+  <text x="390" y="493" text-anchor="middle" font-size="14" fill="#55D6E8">0.598</text>
+  <text x="500" y="493" text-anchor="middle" font-size="14" fill="#55D6E8">0.598</text>
+  <text x="610" y="493" text-anchor="middle" font-size="14" fill="#55D6E8">0.496</text>
+  <text x="720" y="493" text-anchor="middle" font-size="14" fill="#55D6E8">0.496</text>
+  <text x="830" y="493" text-anchor="middle" font-size="14" fill="#55D6E8">0.496</text>
+  <text x="970" y="493" text-anchor="middle" font-size="14" fill="#55D6E8">0.416</text>
+  <text x="1080" y="493" text-anchor="middle" font-size="14" fill="#55D6E8">0.415</text>
+  <text x="22" y="525" font-size="15" fill="#9DE3C3">8 requested:</text>
+  <text x="170" y="525" text-anchor="middle" font-size="14" fill="#9DE3C3">1.909</text>
+  <text x="280" y="525" text-anchor="middle" font-size="14" fill="#9DE3C3">0.759</text>
+  <text x="390" y="525" text-anchor="middle" font-size="14" fill="#9DE3C3">0.501</text>
+  <text x="500" y="525" text-anchor="middle" font-size="14" fill="#9DE3C3">0.501</text>
+  <text x="610" y="525" text-anchor="middle" font-size="14" fill="#9DE3C3">0.405</text>
+  <text x="720" y="525" text-anchor="middle" font-size="14" fill="#9DE3C3">0.405</text>
+  <text x="830" y="525" text-anchor="middle" font-size="14" fill="#9DE3C3">0.405</text>
+  <text x="970" y="525" text-anchor="middle" font-size="14" fill="#9DE3C3">0.393</text>
+  <text x="1080" y="525" text-anchor="middle" font-size="14" fill="#9DE3C3">0.393</text>
+  <rect x="65" y="562" width="1070" height="108" rx="14" fill="#1C2040"/>
+  <text x="90" y="595" font-size="16" class="muted">Original is serial: thread counts label separate requested-thread measurement groups.</text>
+  <text x="90" y="622" font-size="16" class="muted">IPC alone is not a speedup metric; parallel-runtime instructions and cycles are aggregated.</text>
+  <text x="90" y="649" font-size="16" class="muted">The dashed lines separate campaigns; do not infer causal effects across the gaps.</text>
+</svg>

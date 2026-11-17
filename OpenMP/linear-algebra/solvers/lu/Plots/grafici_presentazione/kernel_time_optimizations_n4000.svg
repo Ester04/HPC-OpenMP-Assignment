@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="720" viewBox="0 0 1200 720" fill="#F7F8FC" role="img" aria-labelledby="title desc">
+<title id="title">LU kernel time across optimization stages</title><desc id="desc">Median kernel_seconds by version. Percentages show time reduction relative to SIMD.</desc>
+<style>text { font-family: Arial, Helvetica, sans-serif; } .muted { fill: #BEC4D9; }</style>
+<rect width="1200" height="720" rx="24" fill="#151832"/>
+<text x="600" y="46" text-anchor="middle" font-size="29" font-weight="700">LU kernel time across optimization stages</text>
+<text x="600" y="79" text-anchor="middle" font-size="17" class="muted">N = 4000 · 4 threads requested · median of 3 perf runs</text>
+<line x1="260" y1="110" x2="260" y2="530" stroke="#3A4164" stroke-width="1.5"/><text x="260" y="558" text-anchor="middle" font-size="16" class="muted">0</text>
+<line x1="370" y1="110" x2="370" y2="530" stroke="#3A4164" stroke-width="1.5"/><text x="370" y="558" text-anchor="middle" font-size="16" class="muted">10</text>
+<line x1="480" y1="110" x2="480" y2="530" stroke="#3A4164" stroke-width="1.5"/><text x="480" y="558" text-anchor="middle" font-size="16" class="muted">20</text>
+<line x1="590" y1="110" x2="590" y2="530" stroke="#3A4164" stroke-width="1.5"/><text x="590" y="558" text-anchor="middle" font-size="16" class="muted">30</text>
+<line x1="700" y1="110" x2="700" y2="530" stroke="#3A4164" stroke-width="1.5"/><text x="700" y="558" text-anchor="middle" font-size="16" class="muted">40</text>
+<line x1="810" y1="110" x2="810" y2="530" stroke="#3A4164" stroke-width="1.5"/><text x="810" y="558" text-anchor="middle" font-size="16" class="muted">50</text>
+<line x1="920" y1="110" x2="920" y2="530" stroke="#3A4164" stroke-width="1.5"/><text x="920" y="558" text-anchor="middle" font-size="16" class="muted">60</text>
+<line x1="1030" y1="110" x2="1030" y2="530" stroke="#3A4164" stroke-width="1.5"/><text x="1030" y="558" text-anchor="middle" font-size="16" class="muted">70</text>
+<text x="244" y="141" text-anchor="end" font-size="16" class="muted">Original (serial)</text><rect x="260" y="124" width="660.9636" height="23" rx="7" fill="#B5A5FF"/><text x="929.96" y="141" font-size="16" font-weight="700">60.087601 s</text><text x="1080" y="141" text-anchor="end" font-size="15" class="muted">-58.88%</text>
+<text x="244" y="229" text-anchor="end" font-size="16" class="muted">SIMD</text><rect x="260" y="212" width="416.0260" height="23" rx="7" fill="#FF647C"/><text x="685.03" y="229" font-size="16" font-weight="700">37.820548 s</text><text x="1080" y="229" text-anchor="end" font-size="15" class="muted">+0.00%</text>
+<text x="244" y="273" text-anchor="end" font-size="16" class="muted">+ reciprocal</text><rect x="260" y="256" width="416.0385" height="23" rx="7" fill="#E6B3FF"/><text x="685.04" y="273" font-size="16" font-weight="700">37.821681 s</text><text x="1080" y="273" text-anchor="end" font-size="15" class="muted">-0.00%</text>
+<text x="244" y="317" text-anchor="end" font-size="16" class="muted">+ hoisting</text><rect x="260" y="300" width="413.0982" height="23" rx="7" fill="#CF9EF0"/><text x="682.10" y="317" font-size="16" font-weight="700">37.554381 s</text><text x="1080" y="317" text-anchor="end" font-size="15" class="muted">+0.70%</text>
+<text x="244" y="361" text-anchor="end" font-size="16" class="muted">+ row pointers</text><rect x="260" y="344" width="412.9095" height="23" rx="7" fill="#BC8CDE"/><text x="681.91" y="361" font-size="16" font-weight="700">37.537228 s</text><text x="1080" y="361" text-anchor="end" font-size="15" class="muted">+0.75%</text>
+<text x="244" y="405" text-anchor="end" font-size="16" class="muted">+ restrict</text><rect x="260" y="388" width="412.8460" height="23" rx="7" fill="#A979CD"/><text x="681.85" y="405" font-size="16" font-weight="700">37.531454 s</text><text x="1080" y="405" text-anchor="end" font-size="15" class="muted">+0.76%</text>
+<text x="244" y="449" text-anchor="end" font-size="16" class="muted">static</text><rect x="260" y="432" width="412.9035" height="23" rx="7" fill="#55D6E8"/><text x="681.90" y="449" font-size="16" font-weight="700">37.536679 s</text><text x="1080" y="449" text-anchor="end" font-size="15" class="muted">+0.75%</text>
+<text x="244" y="493" text-anchor="end" font-size="16" class="muted">static,1</text><rect x="260" y="476" width="412.3002" height="23" rx="7" fill="#9DE3C3"/><text x="681.30" y="493" font-size="16" font-weight="700">37.481836 s</text><text x="1080" y="493" text-anchor="end" font-size="15" class="muted">+0.90%</text>
+<text x="1080" y="110" text-anchor="end" font-size="14" class="muted">Time saved vs SIMD</text><text x="645" y="590" text-anchor="middle" font-size="17" class="muted">Seconds · lower is better</text>
+<rect x="65" y="615" width="1070" height="82" rx="14" fill="#1C2040"/>
+<text x="90" y="647" font-size="16" class="muted">Kernel time includes OpenMP team creation and synchronization, but excludes initialization.</text>
+<text x="90" y="675" font-size="16" class="muted">Time saved = (1 − median time / SIMD median) × 100%; positive = faster, negative = slower.</text>
+</svg>
