@@ -9,7 +9,7 @@ SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 UTIL_DIR="$SCRIPT_DIR/../../../utilities"
 
 DATASETS_TEXT="${1:-MINI SMALL STANDARD LARGE EXTRALARGE}"
-PERF_REPS="${2:-3}"
+PERF_REPS="${4:-5}"
 THREADS_TEXT="${3:-4}"
 OUT="${4:-lu_kernel_results.csv}"
 VALGRIND_REPS="${5:-3}"

@@ -254,7 +254,92 @@ misses are about 4.635 billion for `static` and 4.700 billion for
 `static,1`: this is not enough to explain a time difference or, by itself,
 determine which scheduling policy has better locality.
 
-## 8. Correctness and final considerations
+## 8. Is the kernel memory-bound?
+
+### 8.1 Why this test
+
+The previous sections show that the micro-optimizations after OpenMP change
+the time very little despite fewer instructions (−18.89% between SIMD and
+hoisting), and that the 4-thread speedup stays well below 4×. This is typical
+of a **memory-limited** kernel: if time is dominated by data transfer,
+reducing instructions or adding threads does not shorten it proportionally.
+To check this, a targeted test was run on `v0` (original serial) and `v3`
+(OpenMP + SIMD, 4 threads) with `N=32, 128, 1024, 2000`, chosen because they
+change the cache level holding the matrix (`8·N²` bytes, with 32 KB L1d and
+2 MB L2 on the test machine's Cortex-A57, see `Sys-info/sys-info.txt`):
+
+| N | Matrix | Resides in |
+|---:|---:|---|
+| 32 | 8 KB | L1 |
+| 128 | 128 KB | L2 |
+| 1024 | 8 MB | beyond L2 (RAM) |
+| 2000 | ≈ 32 MB | beyond L2 (RAM) |
+
+If the kernel is memory-bound, GFLOPS/s should **drop** when the matrix
+leaves the cache; a compute-bound kernel would stay roughly constant. The
+script is [`perf_v0_v3_topdown.sh`](./../Results/perf_v0_v3_topdown.sh); data
+are in [`lu_memory-bound.csv`](./../Results/lu_memory-bound.csv) (5
+repetitions per point, medians below). The FLOP count is `2/3·N³` for both
+versions.
+
+### 8.2 Data
+
+| N | Version | Threads | Median kernel time (s) | Median GFLOPS/s | Speedup v3/v0 |
+|---:|---|---:|---:|---:|---:|
+| 32 | v0 | 1 | 0.000031 | 0.705 | |
+| 32 | v3 | 4 | 0.000285 | 0.077 | 0.11× |
+| 128 | v0 | 1 | 0.001737 | 0.803 | |
+| 128 | v3 | 4 | 0.000832 | 1.680 | 2.09× |
+| 1024 | v0 | 1 | 1.067871 | 0.670 | |
+| 1024 | v3 | 4 | 0.568598 | 1.259 | 1.88× |
+| 2000 | v0 | 1 | 7.425220 | 0.718 | |
+| 2000 | v3 | 4 | 4.549858 | 1.172 | 1.63× |
+
+Hardware counters are **not available**: in the CSV the `cycles`,
+`instructions`, `cache_*`, `stalled_*`, `backend_bound_pct` and
+`memory_bound_pct` columns are empty (`l1_metric` and `l2_metric` are `n/a`).
+The board's Linux 4.9 kernel and the Cortex-A57 do not expose the top-down
+metrics or the requested events to `perf`. **Backend bound and memory bound
+are therefore not measured directly**; the conclusion below is inferred from
+GFLOPS/s.
+
+### 8.3 Considerations
+
+1. **`v0` is not memory-bound.** Serial GFLOPS/s are nearly constant
+   (0.67–0.80) across two orders of magnitude in N and across cache levels:
+   speed does not depend on where the data live. The limit is the core's
+   scalar throughput (no vectorization with `-O2` on the gcc 7.5 in use,
+   dependencies in the inner loop), not bandwidth.
+2. **`v3` loses efficiency when the matrix leaves L2.** From `N=128` to
+   `N=2000` it falls from 1.68 to 1.17 GFLOPS/s (about −30%) while `v0` stays
+   flat; the speedup drops from 2.09× to 1.63× on 4 cores. With more threads,
+   compute scales better than the data arriving: the expected signature of
+   bandwidth saturation.
+3. **Roofline estimate.** Each step `k` reads and rewrites the remaining
+   submatrix: 16 bytes (8 read + 8 written) per 2 FLOP, i.e. arithmetic
+   intensity ≈ 0.125 FLOP/byte with no cache reuse. At 1.17 GFLOPS/s `v3`
+   needs about 9.4 GB/s; `v0` at 0.72 GFLOPS/s about 5.8 GB/s. The board's
+   LPDDR4 has a theoretical peak of 25.6 GB/s, but the bandwidth the CPU can
+   actually obtain is much lower (order of 8–12 GB/s, **a typical value not
+   measured here**). `v3`'s demand is thus of the same order as the limit,
+   while `v0`'s is well below it.
+4. **`N=32` and `N=128`** say nothing about bandwidth: the matrix fits in
+   cache and at `N=32` the time (≈30 µs) is dominated by OpenMP overhead
+   (barriers at each step `k`), making `v3` 9× slower than `v0`.
+
+### 8.4 Conclusion
+
+`v0` is **compute/latency-bound**, not memory-bound. For `N≥1024`, `v3` is
+**probably limited by memory bandwidth** (or close to it): the GFLOPS/s drop
+on leaving L2, the poor 4-thread scaling (1.6–1.9×) and the roofline
+estimate all point the same way. This is, however, **indirect evidence**:
+confirming it would require backend-bound/memory-bound counters (unavailable
+on this platform), or measuring peak bandwidth with a STREAM benchmark on
+the same machine and comparing it with the ~9 GB/s required. A technique
+consistent with this diagnosis would be blocking (tiled LU), which increases
+cache reuse and thus arithmetic intensity.
+
+## 9. Correctness and final considerations
 
 The initialized matrix is the outer product of the vectors `i+1` and `j+1`,
 scaled by `1/N`: for `N>1`, it has rank one and is **singular**. Without

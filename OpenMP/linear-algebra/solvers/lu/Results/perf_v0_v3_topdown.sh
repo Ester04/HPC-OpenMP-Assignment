@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Confronta LU v0 (seriale originale, lu.c) e v3 (lu_v3.c) al variare di N misurando
 # con perf: GFLOPS/s, backend bound e (se la CPU espone le metriche) memory bound.
-# Usage: ./perf_v0_v3_topdown.sh ["SIZES=32 128 1024 2000"] [REPS=3] ["THREADS=4"] [OUT=lu_v0_v3_topdown.csv]
+# Usage: ./perf_v0_v3_topdown.sh ["SIZES=32 128 1024 2000"] [REPS=5] ["THREADS=4"] [OUT=lu_v0_v3_topdown.csv]
 #   Variabili: CC, CFLAGS, OMPFLAGS, KEEP_LOGS=1 (conserva i log grezzi di perf in <OUT>_logs/)
 # GFLOPS/s = (2/3 * N^3) / kernel_seconds, con kernel_seconds stampato da PolyBench.
 # v0 e' sempre eseguita con 1 thread; v3 con THREADS (puo' essere una lista).
@@ -12,7 +12,7 @@ UTIL_DIR="$SCRIPT_DIR/../../../../utilities"
 LU_DIR="$SCRIPT_DIR/.."
 
 SIZES_TEXT="${1:-32 128 1024 2000}"
-REPS="${2:-3}"
+REPS="${2:-5}" # {2:-5} = default value 5 if not provided as second argument
 THREADS_TEXT="${3:-4}"
 OUT="${4:-lu_v0_v3_topdown.csv}"
 CC="${CC:-gcc}"

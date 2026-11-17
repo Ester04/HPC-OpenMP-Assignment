@@ -251,7 +251,94 @@ Per `N=4000`, i cache miss mediani di processo sono circa 4.635 miliardi per
 `static` e 4.700 per `static,1`: non bastano a spiegare una differenza di
 tempo o a determinare da soli quale scheduling abbia migliore località.
 
-## 8. Correttezza e considerazioni finali
+## 8. Il kernel è memory-bound?
+
+### 8.1 Perché questo test
+
+Le sezioni precedenti mostrano che le micro-ottimizzazioni dopo OpenMP
+cambiano poco il tempo, nonostante un calo delle istruzioni (−18.89% tra SIMD
+e hoisting) e che lo speedup con 4 thread resta ben sotto 4×. Questo
+comportamento è tipico di un kernel **limitato dalla memoria**: se il tempo è
+dominato dal trasferimento dei dati, ridurre le istruzioni o aggiungere
+thread non lo accorcia in proporzione. Per verificarlo si è eseguito un test
+mirato su `v0` (seriale originale) e `v3` (OpenMP + SIMD, 4 thread) con
+`N=32, 128, 1024, 2000`, scelti perché cambiano il livello di cache in cui
+sta la matrice (`8·N²` byte, con L1d da 32 KB e L2 da 2 MB sul Cortex-A57
+della macchina di prova, vedi `Sys-info/sys-info.txt`):
+
+| N | Matrice | Dove risiede |
+|---:|---:|---|
+| 32 | 8 KB | L1 |
+| 128 | 128 KB | L2 |
+| 1024 | 8 MB | oltre L2 (RAM) |
+| 2000 | ≈ 32 MB | oltre L2 (RAM) |
+
+Se il kernel è memory-bound, i GFLOPS/s dovrebbero **calare** quando la
+matrice esce dalla cache. Un kernel limitato dal calcolo resterebbe invece
+circa costante. Lo script è [`perf_v0_v3_topdown.sh`](./../Results/perf_v0_v3_topdown.sh);
+i dati sono in [`lu_memory-bound.csv`](./../Results/lu_memory-bound.csv)
+(5 ripetizioni per punto, mediane riportate sotto).
+Il numero di FLOP è `2/3·N³` per entrambe le versioni.
+
+### 8.2 Dati
+
+| N | Versione | Thread | Tempo kernel mediano (s) | GFLOPS/s mediani | Speedup v3/v0 |
+|---:|---|---:|---:|---:|---:|
+| 32 | v0 | 1 | 0.000031 | 0.705 | |
+| 32 | v3 | 4 | 0.000285 | 0.077 | 0.11× |
+| 128 | v0 | 1 | 0.001737 | 0.803 | |
+| 128 | v3 | 4 | 0.000832 | 1.680 | 2.09× |
+| 1024 | v0 | 1 | 1.067871 | 0.670 | |
+| 1024 | v3 | 4 | 0.568598 | 1.259 | 1.88× |
+| 2000 | v0 | 1 | 7.425220 | 0.718 | |
+| 2000 | v3 | 4 | 4.549858 | 1.172 | 1.63× |
+
+I contatori hardware **non sono disponibili**: nel CSV le colonne `cycles`,
+`instructions`, `cache_*`, `stalled_*`, `backend_bound_pct` e
+`memory_bound_pct` sono vuote (`l1_metric` e `l2_metric` valgono `n/a`). Il
+kernel Linux 4.9 della scheda e il Cortex-A57 non espongono a `perf` le
+metriche top-down né gli eventi richiesti. **Backend bound e memory bound non
+sono quindi misurati direttamente**; la conclusione sotto è inferita dai
+GFLOPS/s.
+
+### 8.3 Considerazioni
+
+1. **`v0` non è memory-bound.** I GFLOPS/s seriali sono quasi costanti
+   (0.67–0.80) al variare di N di due ordini di grandezza e del livello di
+   cache: la velocità non dipende da dove stanno i dati. Il limite è la
+   throughput scalare del core (nessuna vettorizzazione con `-O2` sul gcc 7.5
+   in uso, dipendenze nel ciclo interno), non la banda.
+2. **`v3` perde efficienza quando la matrice esce dalla L2.** Da `N=128` a
+   `N=2000` passa da 1.68 a 1.17 GFLOPS/s (circa −30%) mentre `v0` resta
+   piatto; lo speedup scende da 2.09× a 1.63× su 4 core. Con più thread il
+   calcolo scala meglio dei dati che arrivano: è il segnale atteso di
+   saturazione della banda.
+3. **Stima di roofline.** Ogni passo `k` legge e riscrive la sottomatrice
+   residua: 16 byte (8 letti + 8 scritti) per 2 FLOP, cioè intensità
+   aritmetica ≈ 0.125 FLOP/byte senza riuso in cache. A 1.17 GFLOPS/s `v3`
+   richiede circa 9.4 GB/s; `v0` a 0.72 GFLOPS/s circa 5.8 GB/s. Il
+   LPDDR4 della scheda ha un picco teorico di 25.6 GB/s, ma la banda
+   effettivamente ottenibile dalla CPU è molto inferiore (ordine di 8–12
+   GB/s, **valore tipico non misurato qui**). Il fabbisogno di `v3` è quindi
+   dello stesso ordine del limite, mentre quello di `v0` è ben sotto.
+4. **`N=32` e `N=128`** non dicono nulla sulla banda: la matrice sta in
+   cache e a `N=32` il tempo (≈30 µs) è dominato dall'overhead OpenMP
+   (barriere ad ogni passo `k`), per cui `v3` è 9× più lento di `v0`.
+
+### 8.4 Conclusione
+
+`v0` è **compute/latency-bound**, non memory-bound. `v3` per `N≥1024` è
+**probabilmente limitato dalla banda di memoria** (o vicino al limite): il
+calo di GFLOPS/s all'uscita dalla L2, lo scarso scaling su 4 thread (1.6–1.9×)
+e la stima di roofline puntano nella stessa direzione. Si tratta però di
+**evidenza indiretta**: per confermarlo servirebbero i contatori di backend
+bound/memory bound (non disponibili su questa piattaforma), oppure la
+misura della banda massima con un benchmark STREAM sulla stessa macchina, da
+confrontare con i ~9 GB/s richiesti. Una tecnica coerente con questa
+diagnosi sarebbe il blocking (LU a blocchi), che aumenta il riuso in cache e
+quindi l'intensità aritmetica.
+
+## 9. Correttezza e considerazioni finali
 
 La matrice inizializzata è il prodotto esterno dei vettori `i+1` e `j+1`,
 scalato per `1/N`: per `N>1` ha rango uno ed è **singolare**. Senza pivoting,
