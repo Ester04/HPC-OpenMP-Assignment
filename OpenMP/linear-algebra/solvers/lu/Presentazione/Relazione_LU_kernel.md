@@ -161,7 +161,7 @@ pochi millisecondi: piccoli cambiamenti e precisione del timer pesano molto.
 
 Ogni valore è calcolato come **tempo originale / tempo della versione**.
 
-![Speedup per dimensione rispetto all'originale](./grafici_relazione_kernel/speedup_per_dataset.svg)
+![Speedup per dimensione rispetto all'originale](../Plots/grafici_relazione_kernel/speedup_per_dataset.svg)       
 
 Per `N=4000`, il passaggio dall'originale a OpenMP riduce la mediana da
 60.087601 a 38.538919 s. SIMD risulta più veloce della versione con soli
@@ -172,7 +172,7 @@ singola ottimizzazione.
 
 ### 5.3 Passaggi successivi e variabilità a N=4000
 
-![Tempi mediani dei passaggi, N=4000](./grafici_relazione_kernel/tempi_passaggi_n4000.svg)
+![Tempi mediani dei passaggi, N=4000](../Plots/grafici_relazione_kernel/tempi_passaggi_n4000.svg)
 
 | Versione | Mediana kernel (s) | Min–max (s) | Speedup su originale |
 |---|---:|---:|---:|
@@ -223,7 +223,7 @@ rapporti. Le colonne istruzioni e cicli sono invece mediane separate, espresse
 in miliardi. Questi contatori riguardano il **processo completo**, non
 soltanto il kernel, e aggregano anche l'attività dei thread e del runtime.
 
-![IPC per le varie versioni, N=4000](./grafici_relazione_kernel/ipc_passaggi_n4000.svg)
+![IPC per le varie versioni, N=4000](../Plots/grafici_relazione_kernel/ipc_passaggi_n4000.svg)
 
 | Versione, N=4000 | Istruzioni mediane (miliardi) | Cicli mediani (miliardi) | IPC mediano | Tempo kernel mediano (s) |
 |---|---:|---:|---:|---:|
@@ -273,6 +273,20 @@ della macchina di prova, vedi `Sys-info/sys-info.txt`):
 | 1024 | 8 MB | oltre L2 (RAM) |
 | 2000 | ≈ 32 MB | oltre L2 (RAM) |
 
+Piattaforma di test (da `Sys-info/sys-info.txt`, scheda `nano1`):
+
+| Parametro | Valore |
+|---|---|
+| CPU | ARM Cortex-A57, aarch64, 4 core fisici, 1 thread per core |
+| Frequenza | 102 MHz (min) – 1479 MHz (max), governor `schedutil` |
+| Cache | L1d 32 KB, L1i 48 KB, L2 2 MB (condivisa dai 4 core) |
+| Sistema / compilatore | Linux 4.9.337-tegra, gcc 7.5.0 (Ubuntu 18.04), `-O2 -g -fopenmp` |
+| Carico all'avvio | load average 0.14 (macchina quasi scarica) |
+| Thread OpenMP | 4 thread sui 4 core (CPU 0–3) |
+
+Con 4 thread la L2 da 2 MB è condivisa: già a `N=128` (128 KB) la matrice
+sta in L2 ma non più nelle L1d dei singoli core insieme alle altre righe.
+
 Se il kernel è memory-bound, i GFLOPS/s dovrebbero **calare** quando la
 matrice esce dalla cache. Un kernel limitato dal calcolo resterebbe invece
 circa costante. Lo script è [`perf_v0_v3_topdown.sh`](./../Results/perf_v0_v3_topdown.sh);
@@ -301,42 +315,92 @@ metriche top-down né gli eventi richiesti. **Backend bound e memory bound non
 sono quindi misurati direttamente**; la conclusione sotto è inferita dai
 GFLOPS/s.
 
-### 8.3 Considerazioni
+### 8.3 Banda di memoria misurata (STREAM)
 
-1. **`v0` non è memory-bound.** I GFLOPS/s seriali sono quasi costanti
-   (0.67–0.80) al variare di N di due ordini di grandezza e del livello di
-   cache: la velocità non dipende da dove stanno i dati. Il limite è la
-   throughput scalare del core (nessuna vettorizzazione con `-O2` sul gcc 7.5
-   in uso, dipendenze nel ciclo interno), non la banda.
+Per sostituire le stime con valori reali si è eseguito un benchmark in stile
+STREAM ([`stream_bw.c`](./../Results/stream_bw.c), lanciato con
+[`run_stream.sh`](./../Results/run_stream.sh); risultati in
+[`stream_results.txt`](./../Results/stream_results.txt)) sulla stessa scheda:
+array da 160 MB (molto oltre la L2), `OMP_PROC_BIND=true`, miglior tempo su 19
+iterazioni. Il kernel `LU-update` ripete l'operazione `a[j] -= s*b[j]`
+dell'aggiornamento interno.
+
+| Kernel | 1 thread (GB/s) | 4 thread (GB/s) | Scaling 1→4 |
+|---|---:|---:|---:|
+| Copy | 7.06 | 11.08 | 1.57× |
+| Scale | 7.06 | 10.96 | 1.55× |
+| Add | 6.85 | 9.07 | 1.32× |
+| Triad | 6.86 | 9.08 | 1.32× |
+| LU-update | 6.38 | 8.39 | 1.32× |
+
+La banda sostenibile è quindi **≈7 GB/s con un thread e ≈9–11 GB/s con
+quattro**, contro un picco teorico del LPDDR4 di 25.6 GB/s (valore di
+specifica, non misurato): la banda ottenibile è circa il 40% del picco, e
+quattro thread guadagnano solo 1.3–1.6×.
+
+Nell'aggiornamento LU la riga `A[k][*]` resta in L1 (16 KB a `N=2000`), per
+cui il traffico con la memoria è `A[i][j]` letto e riscritto: 16 byte per 2
+FLOP, cioè **8 B/FLOP**. Il pattern è lo stesso del kernel `Copy`, che serve
+quindi da riferimento: tetto = banda / 8, cioè **0.88 GFLOPS/s con 1 thread**
+(7.06 GB/s) e **1.38 GFLOPS/s con 4 thread** (11.08 GB/s).
+
+| N | Versione | GFLOPS/s misurati | Banda implicita (×8 B/FLOP) | Tetto STREAM (Copy) | % del tetto |
+|---:|---|---:|---:|---:|---:|
+| 1024 | v0 | 0.670 | 5.36 GB/s | 0.88 | 76% |
+| 2000 | v0 | 0.718 | 5.75 GB/s | 0.88 | 81% |
+| 1024 | v3 | 1.259 | 10.07 GB/s | 1.38 | 91% |
+| 2000 | v3 | 1.172 | 9.38 GB/s | 1.38 | 85% |
+
+### 8.4 Considerazioni
+
+1. **`v0` è prevalentemente limitato dal core, ma non lontano dal tetto.**
+   I GFLOPS/s seriali sono quasi costanti (0.67–0.80) al variare di N di due
+   ordini di grandezza e del livello di cache: a `N=128`, con la matrice in
+   L2, la velocità è la stessa che a `N=2000` in RAM. Questo indica che il
+   fattore limitante non è (solo) la banda. Tuttavia a `N≥1024` `v0` usa già
+   il 76–81% della banda a singolo thread: il margine di miglioramento
+   restante senza ridurre il traffico è piccolo.
 2. **`v3` perde efficienza quando la matrice esce dalla L2.** Da `N=128` a
    `N=2000` passa da 1.68 a 1.17 GFLOPS/s (circa −30%) mentre `v0` resta
-   piatto; lo speedup scende da 2.09× a 1.63× su 4 core. Con più thread il
-   calcolo scala meglio dei dati che arrivano: è il segnale atteso di
-   saturazione della banda.
-3. **Stima di roofline.** Ogni passo `k` legge e riscrive la sottomatrice
-   residua: 16 byte (8 letti + 8 scritti) per 2 FLOP, cioè intensità
-   aritmetica ≈ 0.125 FLOP/byte senza riuso in cache. A 1.17 GFLOPS/s `v3`
-   richiede circa 9.4 GB/s; `v0` a 0.72 GFLOPS/s circa 5.8 GB/s. Il
-   LPDDR4 della scheda ha un picco teorico di 25.6 GB/s, ma la banda
-   effettivamente ottenibile dalla CPU è molto inferiore (ordine di 8–12
-   GB/s, **valore tipico non misurato qui**). Il fabbisogno di `v3` è quindi
-   dello stesso ordine del limite, mentre quello di `v0` è ben sotto.
+   piatto; lo speedup scende da 2.09× a 1.63× su 4 core.
+3. **`v3` lavora al 85–91% del tetto di banda misurato.** A 4 thread la
+   banda sostenibile cresce solo di 1.3–1.6× rispetto a un thread, e lo
+   speedup di `v3` su `v0` (1.63–1.88×) è dello stesso ordine: i thread
+   aggiuntivi trovano la memoria già quasi satura. Con la banda implicita di
+   9.4–10.1 GB/s contro 11.1 GB/s (Copy) e 8.4 GB/s (`LU-update`, che però
+   conta 3 flussi e quindi sovrastima il traffico reale), il kernel opera
+   alla soglia di banda. Il margine residuo (9–15%) è compatibile con
+   overhead OpenMP (una barriera per ogni `k`) e con gli ultimi passi, dove
+   la sottomatrice ormai ridotta entra in parte in L2.
 4. **`N=32` e `N=128`** non dicono nulla sulla banda: la matrice sta in
    cache e a `N=32` il tempo (≈30 µs) è dominato dall'overhead OpenMP
    (barriere ad ogni passo `k`), per cui `v3` è 9× più lento di `v0`.
 
-### 8.4 Conclusione
+### 8.5 Conclusione
 
-`v0` è **compute/latency-bound**, non memory-bound. `v3` per `N≥1024` è
-**probabilmente limitato dalla banda di memoria** (o vicino al limite): il
-calo di GFLOPS/s all'uscita dalla L2, lo scarso scaling su 4 thread (1.6–1.9×)
-e la stima di roofline puntano nella stessa direzione. Si tratta però di
-**evidenza indiretta**: per confermarlo servirebbero i contatori di backend
-bound/memory bound (non disponibili su questa piattaforma), oppure la
-misura della banda massima con un benchmark STREAM sulla stessa macchina, da
-confrontare con i ~9 GB/s richiesti. Una tecnica coerente con questa
-diagnosi sarebbe il blocking (LU a blocchi), che aumenta il riuso in cache e
-quindi l'intensità aritmetica.
+Con la banda misurata, `v3` per `N≥1024` è **memory-bound**: raggiunge
+l'85–91% del tetto di banda STREAM a 4 thread (≈11 GB/s, circa il 43% del
+picco teorico di 25.6 GB/s), il tetto cresce solo 1.57× passando da 1 a 4
+thread, e i GFLOPS/s calano quando la matrice esce dalla L2. Ulteriori
+ottimizzazioni sulle istruzioni (SIMD, hoisting, `restrict`) non possono
+quindi dare guadagni significativi, coerentemente con quanto osservato nelle
+sezioni 5–7. `v0` è invece limitato in prevalenza dal core (prestazioni
+uguali dentro e fuori dalla cache) ma si trova già al 76–81% della banda
+a singolo thread. Per andare oltre serve **ridurre il traffico di memoria**,
+ad esempio con una LU a blocchi (*tiling*) che aumenti il riuso in cache e
+quindi l'intensità aritmetica (0.125 FLOP/byte nell'implementazione
+attuale).
+
+**Limiti.** Backend bound e memory bound non sono misurati con contatori
+hardware (non disponibili sulla piattaforma). Il modello a 8 B/FLOP assume
+che `A[k][*]` resti in L1 e che il traffico sia solo `A[i][j]` letto e
+scritto; la banda STREAM è un tetto sostenibile, non un massimo assoluto, e
+il confronto usa le mediane del test LU contro i migliori tempi STREAM. Il
+governor `schedutil` varia la frequenza (102–1479 MHz) e la frequenza
+effettiva durante le prove non è registrata: può influire sui GFLOPS/s, ma
+meno sulla banda di memoria, che dipende soprattutto dal controller DRAM.
+`sys-info.txt` non elenca le istruzioni vettoriali (NEON) del processore, per
+cui la vettorizzazione effettiva di `v3` resta non verificata.
 
 ## 9. Correttezza e considerazioni finali
 

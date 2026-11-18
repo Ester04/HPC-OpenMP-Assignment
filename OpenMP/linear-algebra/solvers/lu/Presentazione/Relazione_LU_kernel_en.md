@@ -275,6 +275,20 @@ change the cache level holding the matrix (`8·N²` bytes, with 32 KB L1d and
 | 1024 | 8 MB | beyond L2 (RAM) |
 | 2000 | ≈ 32 MB | beyond L2 (RAM) |
 
+Test platform (from `Sys-info/sys-info.txt`, board `nano1`):
+
+| Parameter | Value |
+|---|---|
+| CPU | ARM Cortex-A57, aarch64, 4 physical cores, 1 thread per core |
+| Frequency | 102 MHz (min) – 1479 MHz (max), `schedutil` governor |
+| Caches | L1d 32 KB, L1i 48 KB, L2 2 MB (shared by the 4 cores) |
+| OS / compiler | Linux 4.9.337-tegra, gcc 7.5.0 (Ubuntu 18.04), `-O2 -g -fopenmp` |
+| Load at start | load average 0.14 (machine nearly idle) |
+| OpenMP threads | 4 threads on the 4 cores (CPUs 0–3) |
+
+With 4 threads the 2 MB L2 is shared: already at `N=128` (128 KB) the matrix
+fits in L2 but no longer, together with the other rows, in the per-core L1d.
+
 If the kernel is memory-bound, GFLOPS/s should **drop** when the matrix
 leaves the cache; a compute-bound kernel would stay roughly constant. The
 script is [`perf_v0_v3_topdown.sh`](./../Results/perf_v0_v3_topdown.sh); data
@@ -303,41 +317,90 @@ metrics or the requested events to `perf`. **Backend bound and memory bound
 are therefore not measured directly**; the conclusion below is inferred from
 GFLOPS/s.
 
-### 8.3 Considerations
+### 8.3 Measured memory bandwidth (STREAM)
 
-1. **`v0` is not memory-bound.** Serial GFLOPS/s are nearly constant
-   (0.67–0.80) across two orders of magnitude in N and across cache levels:
-   speed does not depend on where the data live. The limit is the core's
-   scalar throughput (no vectorization with `-O2` on the gcc 7.5 in use,
-   dependencies in the inner loop), not bandwidth.
+To replace the estimates with real values, a STREAM-style benchmark
+([`stream_bw.c`](./../Results/stream_bw.c), run with
+[`run_stream.sh`](./../Results/run_stream.sh); results in
+[`stream_results.txt`](./../Results/stream_results.txt)) was run on the same
+board: 160 MB arrays (far beyond L2), `OMP_PROC_BIND=true`, best time over 19
+iterations. The `LU-update` kernel repeats the inner-update operation
+`a[j] -= s*b[j]`.
+
+| Kernel | 1 thread (GB/s) | 4 threads (GB/s) | Scaling 1→4 |
+|---|---:|---:|---:|
+| Copy | 7.06 | 11.08 | 1.57× |
+| Scale | 7.06 | 10.96 | 1.55× |
+| Add | 6.85 | 9.07 | 1.32× |
+| Triad | 6.86 | 9.08 | 1.32× |
+| LU-update | 6.38 | 8.39 | 1.32× |
+
+Sustainable bandwidth is therefore **≈7 GB/s with one thread and ≈9–11 GB/s
+with four**, versus a theoretical LPDDR4 peak of 25.6 GB/s (a specification
+value, not measured): the attainable bandwidth is about 40% of peak, and
+four threads gain only 1.3–1.6×.
+
+In the LU update, row `A[k][*]` stays in L1 (16 KB at `N=2000`), so memory
+traffic is `A[i][j]` read and rewritten: 16 bytes per 2 FLOP, i.e. **8
+B/FLOP**. This is the same pattern as the `Copy` kernel, which therefore
+serves as reference: ceiling = bandwidth / 8, i.e. **0.88 GFLOPS/s with 1
+thread** (7.06 GB/s) and **1.38 GFLOPS/s with 4 threads** (11.08 GB/s).
+
+| N | Version | Measured GFLOPS/s | Implied bandwidth (×8 B/FLOP) | STREAM ceiling (Copy) | % of ceiling |
+|---:|---|---:|---:|---:|---:|
+| 1024 | v0 | 0.670 | 5.36 GB/s | 0.88 | 76% |
+| 2000 | v0 | 0.718 | 5.75 GB/s | 0.88 | 81% |
+| 1024 | v3 | 1.259 | 10.07 GB/s | 1.38 | 91% |
+| 2000 | v3 | 1.172 | 9.38 GB/s | 1.38 | 85% |
+
+### 8.4 Considerations
+
+1. **`v0` is mainly core-limited, but not far from the ceiling.** Serial
+   GFLOPS/s are nearly constant (0.67–0.80) across two orders of magnitude in
+   N and across cache levels: at `N=128`, with the matrix in L2, speed equals
+   that at `N=2000` in RAM. This indicates bandwidth is not the (only)
+   limiting factor. However, for `N≥1024` `v0` already uses 76–81% of the
+   single-thread bandwidth, so there is little headroom left without
+   reducing traffic.
 2. **`v3` loses efficiency when the matrix leaves L2.** From `N=128` to
    `N=2000` it falls from 1.68 to 1.17 GFLOPS/s (about −30%) while `v0` stays
-   flat; the speedup drops from 2.09× to 1.63× on 4 cores. With more threads,
-   compute scales better than the data arriving: the expected signature of
-   bandwidth saturation.
-3. **Roofline estimate.** Each step `k` reads and rewrites the remaining
-   submatrix: 16 bytes (8 read + 8 written) per 2 FLOP, i.e. arithmetic
-   intensity ≈ 0.125 FLOP/byte with no cache reuse. At 1.17 GFLOPS/s `v3`
-   needs about 9.4 GB/s; `v0` at 0.72 GFLOPS/s about 5.8 GB/s. The board's
-   LPDDR4 has a theoretical peak of 25.6 GB/s, but the bandwidth the CPU can
-   actually obtain is much lower (order of 8–12 GB/s, **a typical value not
-   measured here**). `v3`'s demand is thus of the same order as the limit,
-   while `v0`'s is well below it.
+   flat; the speedup drops from 2.09× to 1.63× on 4 cores.
+3. **`v3` runs at 85–91% of the measured bandwidth ceiling.** With four
+   threads sustainable bandwidth grows only 1.3–1.6× versus one thread, and
+   the speedup of `v3` over `v0` (1.63–1.88×) is of the same order: the extra
+   threads find memory already nearly saturated. The implied 9.4–10.1 GB/s
+   compares with 11.1 GB/s (Copy) and 8.4 GB/s (`LU-update`, which counts 3
+   streams and so overstates the real traffic). The remaining margin (9–15%)
+   is compatible with OpenMP overhead (one barrier per `k`) and with the
+   late steps, where the shrinking submatrix partly fits in L2.
 4. **`N=32` and `N=128`** say nothing about bandwidth: the matrix fits in
    cache and at `N=32` the time (≈30 µs) is dominated by OpenMP overhead
    (barriers at each step `k`), making `v3` 9× slower than `v0`.
 
-### 8.4 Conclusion
+### 8.5 Conclusion
 
-`v0` is **compute/latency-bound**, not memory-bound. For `N≥1024`, `v3` is
-**probably limited by memory bandwidth** (or close to it): the GFLOPS/s drop
-on leaving L2, the poor 4-thread scaling (1.6–1.9×) and the roofline
-estimate all point the same way. This is, however, **indirect evidence**:
-confirming it would require backend-bound/memory-bound counters (unavailable
-on this platform), or measuring peak bandwidth with a STREAM benchmark on
-the same machine and comparing it with the ~9 GB/s required. A technique
-consistent with this diagnosis would be blocking (tiled LU), which increases
-cache reuse and thus arithmetic intensity.
+With the measured bandwidth, `v3` for `N≥1024` is **memory-bound**: it
+reaches 85–91% of the 4-thread STREAM ceiling (≈11 GB/s, about 43% of the
+25.6 GB/s theoretical peak), the ceiling grows only 1.57× from 1 to 4
+threads, and GFLOPS/s drop when the matrix leaves L2. Further instruction-
+level optimizations (SIMD, hoisting, `restrict`) therefore cannot give
+significant gains, consistent with sections 5–7. `v0` is instead mostly
+core-limited (same performance inside and outside the cache) but already
+sits at 76–81% of single-thread bandwidth. To go further, **memory traffic
+must be reduced**, e.g. with a blocked (tiled) LU that increases cache reuse
+and thus arithmetic intensity (0.125 FLOP/byte in the current
+implementation).
+
+**Limitations.** Backend bound and memory bound are not measured with
+hardware counters (unavailable on this platform). The 8 B/FLOP model assumes
+`A[k][*]` stays in L1 and that traffic is only `A[i][j]` read and written;
+STREAM bandwidth is a sustainable ceiling, not an absolute maximum, and the
+comparison uses medians of the LU test against best STREAM times. The
+`schedutil` governor varies frequency (102–1479 MHz) and the effective
+frequency during the runs is not recorded: it may affect GFLOPS/s, but less
+so memory bandwidth, which depends mainly on the DRAM controller.
+`sys-info.txt` does not list the processor's vector (NEON) instructions, so
+the actual vectorization of `v3` remains unverified.
 
 ## 9. Correctness and final considerations
 

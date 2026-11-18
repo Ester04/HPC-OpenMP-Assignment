@@ -1,0 +1,28 @@
+# threads=1 array_size=20000000 elementi (160.0 MB per array) NTIMES=20
+Kernel         BestGB/s      AvgGB/s  BestTime[s]
+Copy              7.064        7.052     0.045297
+Scale             7.061        7.030     0.045317
+Add               6.849        6.823     0.070079
+Triad             6.863        6.812     0.069943
+LU-update         6.375        6.339     0.075292
+# check 4.87704e+23
+
+# threads=4 array_size=20000000 elementi (160.0 MB per array) NTIMES=20
+Kernel         BestGB/s      AvgGB/s  BestTime[s]
+Copy             11.077       10.801     0.028888
+Scale            10.959       10.790     0.029199
+Add               9.073        9.020     0.052906
+Triad             9.077        9.026     0.052881
+LU-update         8.391        8.372     0.057205
+# check 4.87704e+23
+
+== Banda richiesta da LU (mediana GFLOPS/s del CSV) ==
+ver  N      thr      GFLOPS     BW@8B/FLOP    BW@12B/FLOP
+v0   32     1         0.705        5.64 GB/s        8.46 GB/s
+v3   32     4         0.077        0.61 GB/s        0.92 GB/s
+v0   128    1         0.803        6.42 GB/s        9.64 GB/s
+v3   128    4         1.680       13.44 GB/s       20.16 GB/s
+v0   1024   1         0.670        5.36 GB/s        8.04 GB/s
+v3   1024   4         1.259       10.07 GB/s       15.11 GB/s
+v0   2000   1         0.718        5.75 GB/s        8.62 GB/s
+v3   2000   4         1.172        9.38 GB/s       14.07 GB/s
